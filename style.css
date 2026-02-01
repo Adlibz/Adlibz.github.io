@@ -2,7 +2,7 @@ body {
   margin: 0;
   font-family: 'Segoe UI', sans-serif;
   background: linear-gradient(135deg, #ff9a9e, #fad0c4);
-  height: 100vh;
+  min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -14,7 +14,7 @@ body {
   border-radius: 20px;
   text-align: center;
   box-shadow: 0 20px 40px rgba(0,0,0,0.2);
-  width: 320px;
+  width: 340px;
 }
 
 .hidden {
@@ -42,11 +42,42 @@ button {
 .buttons {
   display: flex;
   justify-content: space-around;
+  gap: 12px;
   margin-top: 30px;
 }
 
 .small {
   font-size: 14px;
-  margin-top: 10px;
+  margin-top: 14px;
   color: #555;
+}
+
+.us-photo {
+  width: 100%;
+  max-width: 280px;
+  height: auto;
+  border-radius: 16px;
+  margin: 18px auto 10px;
+  display: block;
+  box-shadow: 0 12px 24px rgba(0,0,0,0.15);
+}
+
+.typed-wrap {
+  font-size: 16px;
+  line-height: 1.5;
+  margin: 10px 0 6px;
+  color: #222;
+}
+
+.cursor {
+  display: inline-block;
+  margin-left: 2px;
+  animation: blink 1s infinite;
+  color: #ff4d6d;
+  font-weight: 600;
+}
+
+@keyframes blink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
 }
