@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Hey You 💖</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <div class="container" id="screen1">
+    <h1>Hey beautiful 🌸</h1>
+    <p>I made something just for you.</p>
+    <button onclick="nextScreen()">Continue 💌</button>
+  </div>
+
+  <div class="container hidden" id="screen2">
+    <h1>So I was thinking…</h1>
+    <p>Life is better with you in it.</p>
+    <button onclick="nextScreen()">One more thing 👉</button>
+  </div>
+
+  <div class="container hidden" id="screen3">
+    <h1>Will you be my Valentine? 💘</h1>
+
+    <div class="buttons">
+      <button class="yes" onclick="sayYes()">YES 💖</button>
+      <button class="no" id="noBtn">No 🙃</button>
+    </div>
+  </div>
+
+  <div class="container hidden" id="screen4">
+    <h1>YAYYYYY 🥰</h1>
+    <p>Best decision you’ve made all year.</p>
+    <p class="small">See you on Valentine’s Day ❤️</p>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
