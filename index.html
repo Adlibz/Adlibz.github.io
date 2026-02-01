@@ -2,10 +2,14 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Hey You 💖</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+
+  <!-- 🎵 Background music (starts after first click for autoplay rules) -->
+  <audio id="bgMusic" src="song.mp3" loop preload="auto"></audio>
 
   <div class="container" id="screen1">
     <h1>Hey beautiful 🌸</h1>
@@ -30,7 +34,15 @@
 
   <div class="container hidden" id="screen4">
     <h1>YAYYYYY 🥰</h1>
-    <p>Best decision you’ve made all year.</p>
+
+    <!-- 📸 your collage -->
+    <img class="us-photo" src="us.jpg" alt="Us" />
+
+    <!-- 💌 typed message -->
+    <p class="typed-wrap">
+      <span id="typedMessage"></span><span class="cursor">|</span>
+    </p>
+
     <p class="small">See you on Valentine’s Day ❤️</p>
   </div>
 
