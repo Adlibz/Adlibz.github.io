@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Support Web Form">
+  <meta name="keywords" content="Support, Web Form">
+  <link rel="icon" href="./resource/images/logo.png" type="image/x-icon">
+  <link rel="apple-touch-icon" href="./resource/images/logo.png">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300..900&family=Roboto:wght@300..900&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="./styles.css">
+  <script src="https://static.zohocdn.com/zohodeskstatic/app/js/jqueryandencoder.ef05974972bf3bca1b87.js"></script>
+  <script defer src="./script.js"></script>
+</head>
+<body>
+  <div class="page">
+    <header class="topbar">
+      <div class="brand">
+        <img class="brand__logo" src="./resource/images/logo.png" alt="Logo" />
+        <div class="brand__text">
+          <div class="brand__name">Support Portal</div>
+          <div class="brand__sub">Submit a request and track resolution</div>
+        </div>
+      </div>
+
+      <div class="topbar__right">
+        <span class="pill">
+          <span class="pill__dot" aria-hidden="true"></span>
+          Online
+        </span>
+      </div>
+    </header>
+
+    <main class="layout">
+      <section class="panel panel--info">
+        <div class="panel__inner">
+          <div class="kicker">Fast • Secure • Professional</div>
+          <h1 class="title">Web Request Form</h1>
+          <p class="lead">
+            Fill in the form with accurate details. Attach screenshots or documents if needed.
+            Our team will review and respond as soon as possible.
+          </p>
+
+          <div class="infoGrid" role="list">
+            <div class="infoCard" role="listitem">
+              <div class="infoCard__label">Attachments</div>
+              <div class="infoCard__value">Up to 5 files</div>
+              <div class="infoCard__hint">Max 20MB each</div>
+            </div>
+            <div class="infoCard" role="listitem">
+              <div class="infoCard__label">Priority</div>
+              <div class="infoCard__value">High / Medium / Low</div>
+              <div class="infoCard__hint">Choose appropriately</div>
+            </div>
+            <div class="infoCard" role="listitem">
+              <div class="infoCard__label">Working hours</div>
+              <div class="infoCard__value">Mon–Fri</div>
+              <div class="infoCard__hint">Support hours may vary</div>
+            </div>
+          </div>
+
+          <div class="securityNote">
+            <span class="securityNote__icon" aria-hidden="true">🔒</span>
+            Your information is handled securely and used only for support purposes.
+          </div>
+        </div>
+        <div class="panel__glow" aria-hidden="true"></div>
+      </section>
+
+      <section class="panel panel--form">
+        <div class="panel__inner">
+          <div class="formHeader">
+            <div>
+              <div class="formHeader__title">New Ticket</div>
+              <div class="formHeader__subtitle">Fields marked as required must be completed.</div>
+            </div>
+            <div class="formHeader__badge">Zoho Desk</div>
+          </div>
+
+          <!-- Zoho embed (form only). Styling is handled by styles.css -->
+          <div id='zohoSupportWebToCase' align='center'> <form name='zsWebToCase_1109991000006963130' id='zsWebToCase_1109991000006963130' action='https://desk.zoho.com/support/WebToCase' method='POST' onSubmit='return zsValidateMandatoryFields()' enctype='multipart/form-data'>  <input type='hidden' name='xnQsjsdp' value='edbsn95bb0373c6f58d71a40a954a9e3edb94'/>  <input type='hidden' name='xmIwtLD' value='edbsncb398600628ffb8d6529b53d4782e81cf2d2bb7935212fa604ff60ea26a9ab7d'/>  <input type='hidden' name='xJdfEaS' value=''/>  <input type='hidden' name='actionType' value='Q2FzZXM='/>   <input type="hidden" id="property(module)" value="Cases"/>  <input type="hidden" id="dependent_field_values_Cases" value="{&#34;JSON_VALUES&#34;:{},&#34;JSON_SELECT_VALUES&#34;:{},&#34;JSON_MAP_DEP_LABELS&#34;:[]}"/> <input type='hidden' name='returnURL' value='*'/><table border='0' cellspacing='0' class='zsFormClass'><tr><td colspan='2' class='zsFontClass'><strong>Web Form</strong></td></tr><br><tr ><td nowrap class='zsFontClass ' width='25%' align='left'>First Name&nbsp;&nbsp;</td><td align='left' width='75%'><input type='text' maxlength='120' name='First Name' value='' /></td></tr><tr ><td nowrap class='zsFontClass ' width='25%' align='left'>Last Name&nbsp;&nbsp;</td><td align='left' width='75%'><input type='text' maxlength='120' name='Contact Name' class='manfieldbdr'/></td></tr><tr ><td nowrap class='zsFontClass ' width='25%' align='left'>Phone&nbsp;&nbsp;</td><td align='left' width='75%'><input type='text' maxlength='120' name='Phone' value='' /></td></tr> <tr ><td nowrap class='zsFontClass ' width='25%' align='left'>Email&nbsp;&nbsp;</td><td align='left' width='75%'><input type='text' maxlength='120' name='Email' value='' class='manfieldbdr'/></td></tr> <tr ><td nowrap class='zsFontClass ' width='25%' align='left'>Subject&nbsp;&nbsp;</td><td align='left' width='75%'><input type='text' maxlength='255' name='Subject' value='' class='manfieldbdr'/></td></tr> <tr ><td nowrap class='zsFontClass ' width='25%' align='left'>Description &nbsp;&nbsp;</td><td align='left' width='75%'> <textarea name='Description' maxlength='3000' width='250' height='250' ></textarea></td></tr><tr ><td nowrap class='zsFontClass ' width='25%' align='left'>Attachment &nbsp;&nbsp;</td><td align='left' width='75%'><span class="zsFontClass wtcuploadfile" id="zsBrowseAttachment">Attach files</span><input class="wtcuploadinput" type='file' name='attachment_1' id='zsattachment_1' style='display:block;' onclick='zsOpenFileBrowseAttachment(event)' onchange='zsRenderBrowseFileAttachment(this.value, this)'/><input class="wtcuploadinput" type='file' name='attachment_2' id='zsattachment_2' style='display:none;' onclick='zsOpenFileBrowseAttachment(event)' onchange='zsRenderBrowseFileAttachment(this.value, this)'/> <input class="wtcuploadinput" type='file' name='attachment_3' id='zsattachment_3' style='display:none;' onclick='zsOpenFileBrowseAttachment(event)' onchange='zsRenderBrowseFileAttachment(this.value, this)'/> <input class="wtcuploadinput" type='file' name='attachment_4' id='zsattachment_4' style='display:none;' onclick='zsOpenFileBrowseAttachment(event)' onchange='zsRenderBrowseFileAttachment(this.value, this)'/> <input class="wtcuploadinput" type='file' name='attachment_5' id='zsattachment_5' style='display:none;' onclick='zsOpenFileBrowseAttachment(event)' onchange='zsRenderBrowseFileAttachment(this.value, this)'/><div class="clboth"></div><span id='zsMaxSizeMessage' style='color:black;font-size: 8px;float: left;'>Each of your file(s) can be up to 20MB in size.</span><span id='zsMaxLimitMessage' style='color:black;font-size: 8px;float: left;margin-left: 14px;display: none;'>You can attach as many as 5 files at a time.</span><div id='zsFileBrowseAttachments'></div></td></tr><tr ><td nowrap class='zsFontClass ' width='25%' align='left'>Priority &nbsp;&nbsp;</td><td align='left' width='75%'><select name='Priority' value=''  onchange="setDependent(this, false)" id='Priority'> <option value='' >-None-</option> <option value='High' >High</option> <option value='Medium' >Medium</option> <option value='Low' >Low</option> </select></td></tr><tr ><td nowrap class='zsFontClass ' width='25%' align='left'>Due Date &nbsp;&nbsp;</td><td align='left' width='75%'><input type='date' min='1000-01-01' max='9999-12-31' maxlength='20' name='Due Date' value='' class='dob-field wb_cusInput'/> <select name='Due Datehour' class='wb_selectDate'><option value='01' >01</option><option value='02' >02</option><option value='03' >03</option><option value='04' >04</option><option value='05' >05</option><option value='06' >06</option><option value='07' >07</option><option value='08' >08</option><option value='09' >09</option><option value='10' >10</option><option value='11' >11</option><option value='12' >12</option></select>&nbsp;<select name='Due Dateminute' class='wb_selectDate'><option value='00' >00</option><option value='01' >01</option><option value='02' >02</option><option value='03' >03</option><option value='04' >04</option><option value='05' >05</option><option value='06' >06</option><option value='07' >07</option><option value='08' >08</option><option value='09' >09</option><option value='10' >10</option><option value='11' >11</option><option value='12' >12</option><option value='13' >13</option><option value='14' >14</option><option value='15' >15</option><option value='16' >16</option><option value='17' >17</option><option value='18' >18</option><option value='19' >19</option><option value='20' >20</option><option value='21' >21</option><option value='22' >22</option><option value='23' >23</option><option value='24' >24</option><option value='25' >25</option><option value='26' >26</option><option value='27' >27</option><option value='28' >28</option><option value='29' >29</option><option value='30' >30</option><option value='31' >31</option><option value='32' >32</option><option value='33' >33</option><option value='34' >34</option><option value='35' >35</option><option value='36' >36</option><option value='37' >37</option><option value='38' >38</option><option value='39' >39</option><option value='40' >40</option><option value='41' >41</option><option value='42' >42</option><option value='43' >43</option><option value='44' >44</option><option value='45' >45</option><option value='46' >46</option><option value='47' >47</option><option value='48' >48</option><option value='49' >49</option><option value='50' >50</option><option value='51' >51</option><option value='52' >52</option><option value='53' >53</option><option value='54' >54</option><option value='55' >55</option><option value='56' >56</option><option value='57' >57</option><option value='58' >58</option><option value='59' >59</option></select>&nbsp;<select name='Due Dateampm' class='wb_selectDate'><option value='AM' >AM</option><option value='PM' >PM</option></select></td></tr><tr><td style='padding: 11px 5px 0px 5px;' colspan='2' align='center' width='25%'> <input type='submit' id="zsSubmitButton_1109991000006963130" class='zsFontClass' value='Submit'> &nbsp; &nbsp; <input type='button' class='zsFontClass' value='Reset' onclick="zsResetWebForm('1109991000006963130')"> </td></tr><tr><td width='25%' align='left'></td><td style='padding: 0px 5px;' align='left' width='75%'> <div class='wb_FtCon wb_common'><span>powered by  </span><a target='_blank' rel='noopener noreferrer' href='https://zoho.com/desk' class='wb_logoCon'><img class='wb_logo' src='https://static.zohocdn.com/zohodeskstatic/app/images/portalLogo.de847024ebc0131731a3.png' /></a></div></td></tr></table></form></div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div>© <span id="year"></span> • Support Portal</div>
+      <div class="footer__sep">•</div>
+      <div class="footer__hint">If you face issues submitting, try another browser or clear cache.</div>
+    </footer>
+  </div>
+</body>
+</html>
