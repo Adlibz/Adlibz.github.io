@@ -1,0 +1,275 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: "Montserrat", sans-serif;
+}
+
+
+#zohoSupportWebToCase textarea,
+#zohoSupportWebToCase input[type='text'],
+#zohoSupportWebToCase input[type='date'],
+#zohoSupportWebToCase select,
+.wb_common {
+    width: 280px;
+    appearance: none;
+    padding: 0.6em 0.9em;
+    border-radius: 8px;
+    border: 1px solid rgb(208, 214, 224);
+    box-shadow: rgba(157, 157, 157, 0.25) 0px 3px 3px -2px;
+    color: rgb(1, 34, 54);
+    font-size: 0.95em;
+    background: rgb(255, 255, 255);
+    transition: 0.1s ease-in-out;
+    width: 100%;
+}
+
+#zohoSupportWebToCase td {
+    padding: 14px 6px;
+}
+
+#zohoSupportWebToCase .wb_selectDate {
+    width: auto
+}
+
+#zohoSupportWebToCase input.wb_cusInput {
+    width: 108px
+}
+
+.wb_FtCon {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    margin-top: 15px;
+    padding-left: 10px
+}
+
+.wb_logoCon {
+    display: flex;
+    margin-left: 5px
+}
+
+.wb_logo {
+    max-width: 16px;
+    max-height: 16px;
+}
+
+#zohoSupportWebToCase .wb_multi_pick {
+    border: 1px solid #ddd;
+    padding: 3px 5px;
+    border-radius: 3px;
+    width: 280px;
+    height: 95px;
+    overflow-y: auto;
+}
+
+#zohoSupportWebToCase .wb_multi_pick_label {
+    display: block;
+}
+
+#zohoSupportWebToCase .wb_multi_pick_input,
+.wb_multi_pick_input_all {
+    vertical-align: middle;
+    margin-right: 5px;
+}
+
+.zsFormClass {
+    background-color: #FFFFFF;
+    width: 600px
+}
+
+.zsFontClass {
+    color: #000000;
+    font-size: 13px
+}
+
+.manfieldbdr {
+    border-left: 1px solid #ff6448 !important
+}
+
+.hleft {
+    text-align: left;
+}
+
+input[type=file]::-webkit-file-upload-button {
+    cursor: pointer;
+}
+
+.wtcsepcode {
+    margin: 0px 15px;
+    color: #aaa;
+    float: left;
+}
+
+.wtccloudattach {
+    float: left;
+    color: #00a3fe !important;
+    cursor: pointer;
+    text-decoration: none !important;
+}
+
+.wtccloudattach:hover {
+    text-decoration: none !important;
+}
+
+.wtcuploadinput {
+    cursor: pointer;
+    float: left;
+    width: 62px;
+    margin-top: -14px;
+    opacity: 0;
+    clear: both;
+}
+
+.wtcuploadfile {
+    position: relative;
+    float: left;
+    color: #00a3fe;
+    font-size: 14px;
+
+    &:after {
+        content: "";
+        position: absolute;
+        left: 0;
+        bottom: 0;
+        height: 1px;
+        width: 100%;
+        background: #00a3fe;
+    }
+}
+
+.filenamecls {
+    margin-right: 15px;
+    float: left;
+    margin-top: 10px;
+    font-size: 14px;
+}
+
+.clboth {
+    clear: both;
+}
+
+#zsFileBrowseAttachments {
+    clear: both;
+    margin: 5px 0px 10px;
+}
+
+.zsfilebrowseAttachment {
+    text-decoration: none;
+    color: #f0522f;
+    border: 1px solid #f0522f;
+    padding: 1px 4px;
+    border-radius: 100%;
+}
+
+.zsFontClass {
+    vertical-align: top;
+}
+
+#tooltip-zc {
+    font: normal 12px Arial, Helvetica, sans-serif;
+    line-height: 18px;
+    position: absolute;
+    padding: 8px;
+    margin: 20px 0 0;
+    background: #fff;
+    border: 1px solid #528dd1;
+    -moz-border-radius: 5px;
+    -webkit-border-radius: 5px;
+    border-radius: 5px;
+    color: #eee;
+    -webkit-box-shadow: 5px 5px 20px rgba(0, 0, 0, 0.2);
+    -moz-box-shadow: 5px 5px 20px rgba(0, 0, 0, 0.2);
+    z-index: 10000;
+    color: #777
+}
+
+.wtcmanfield {
+    color: #f00;
+    font-size: 16px;
+    position: relative;
+    top: 2px;
+    left: 1px;
+}
+
+#zsCloudAttachmentIframe {
+    width: 100%;
+    height: 100%;
+    z-index: 99999 !important;
+    position: fixed;
+    left: 0px;
+    top: 0px;
+    border-style: none;
+    display: none;
+    background-color: #fff;
+}
+
+.wtchelpinfo {
+    background-position: -246px -485px;
+    width: 15px;
+    height: 15px;
+    display: inline-block;
+    position: relative;
+    top: 2px;
+    background-image: url(https://d1ydxa2xvtn0b5.cloudfront.net/app/images/zs-mpro.b6c9cf2347c62390fdcb.png);
+}
+
+#zsMaxSizeMessage {
+    font-size: 12px;
+}
+
+.form-logo {
+    display: inline-block;
+    min-width: 40px;
+    min-height: 40px;
+    margin-top: 10px;
+}
+
+.form-title {
+    font-size: 30px;
+    margin-bottom: 25px;
+}
+
+.form-label {
+    font-size: 16px;
+    margin-bottom: 10px;
+    font-weight: 500;
+}
+
+#zohoSupportWebToCase input[type='text'],
+#zohoSupportWebToCase input[type='date'],
+#zohoSupportWebToCase select {
+    height: 43px;
+}
+
+#zohoSupportWebToCase textarea::placeholder,
+#zohoSupportWebToCase input[type='text']::placeholder,
+#zohoSupportWebToCase input[type='date']::placeholder,
+#zohoSupportWebToCase select::placeholder,
+.wb_common::placeholder {
+    color: #aaa;
+}
+
+#zohoSupportWebToCase textarea:focus,
+#zohoSupportWebToCase input[type='text']:focus,
+#zohoSupportWebToCase input[type='date']:focus,
+#zohoSupportWebToCase select:focus,
+.wb_common:focus {
+    border: none;
+    box-shadow: rgba(13, 125, 200, 0.25) 0px 3px 3px -2px;
+}
+
+#zohoSupportWebToCase .form-button {
+    color: #fff;
+    background-color: #4b4cdc;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    font-size: 0.92em;
+    line-height: 1;
+}
