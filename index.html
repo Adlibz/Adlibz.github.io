@@ -25,8 +25,8 @@
       <div class="brand">
         <img class="brand__logo" src="./resource/images/logo.png" alt="Logo" />
         <div class="brand__text">
-          <div class="brand__name">RSSB Support Portal</div>
-          <div class="brand__sub">Member first • Fast support, with your Microsoft sign‑in</div>
+          <div class="brand__name">Support Portal</div>
+          <div class="brand__sub">Submit a request and track resolution</div>
         </div>
       </div>
 
@@ -44,12 +44,55 @@
 
     <!-- Login gate: shown until the user signs in (optional but recommended) -->
     <div id="authGate" class="authGate" hidden>
-      <div class="authGate__card" role="dialog" aria-modal="true" aria-label="Sign in">
-        <img class="authGate__logo" src="./resource/images/logo.png" alt="Logo" />
-        <div class="authGate__title">RSSB Support Portal</div>
-        <div class="authGate__subtitle">Member first. Sign in with your Microsoft account to auto‑fill your name and email.</div>
-        <button id="btnGateSignIn" class="btn btn--primary btn--lg" type="button">Continue with Microsoft</button>
-        <div class="authGate__hint">If sign-in doesn’t open, allow popups for this site.</div>
+      <div class="authGate__bg" aria-hidden="true"></div>
+
+      <div class="authGate__wrap">
+        <div class="authHero">
+          <img class="authHero__logo" src="./resource/images/logo.png" alt="RSSB Logo" />
+          <div class="authHero__kicker">Member first</div>
+          <h1 class="authHero__title">RSSB Support Portal</h1>
+          <p class="authHero__subtitle">
+            Sign in with your Microsoft account to auto‑fill your details and submit a support request faster.
+          </p>
+
+          <div class="authHero__stats" role="list" aria-label="Benefits">
+            <div class="authStat" role="listitem">
+              <div class="authStat__label">Secure</div>
+              <div class="authStat__value">O365 Sign‑in</div>
+            </div>
+            <div class="authStat" role="listitem">
+              <div class="authStat__label">Fast</div>
+              <div class="authStat__value">Auto‑fill</div>
+            </div>
+            <div class="authStat" role="listitem">
+              <div class="authStat__label">Premium</div>
+              <div class="authStat__value">Blue • Gold</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="authCard" role="dialog" aria-modal="true" aria-label="Sign in">
+          <div class="authCard__header">
+            <div class="authCard__badge">Welcome</div>
+            <div class="authCard__h">Continue to support form</div>
+            <div class="authCard__p">Use your work account (RSSB Microsoft 365).</div>
+          </div>
+
+          <button id="btnGateSignIn" class="cta cta--microsoft" type="button">
+            <span class="cta__ms" aria-hidden="true"></span>
+            Continue with Microsoft
+            <span class="cta__arrow" aria-hidden="true">→</span>
+          </button>
+
+          <div class="authCard__hint">
+            If sign‑in doesn’t open, allow pop‑ups for this site.
+          </div>
+
+          <div class="authCard__foot">
+            <span class="dot dot--gold" aria-hidden="true"></span>
+            By signing in, your name and email will be filled automatically.
+          </div>
+        </div>
       </div>
     </div>
 
@@ -57,9 +100,9 @@
       <section class="panel panel--info">
         <div class="panel__inner">
           <div class="kicker">Fast • Secure • Professional</div>
-          <h1 class="title">Member First Support Request</h1>
+          <h1 class="title">Web Request Form</h1>
           <p class="lead">
-            Member first: log your request in seconds. Attach screenshots or documents if needed.
+            Fill in the form with accurate details. Attach screenshots or documents if needed.
             Our team will review and respond as soon as possible.
           </p>
 

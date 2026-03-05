@@ -121,6 +121,15 @@ async function initMicrosoftAuth() {
 
   const pca = new window.msal.PublicClientApplication(msalConfig);
 
+  // MSAL v3+ requires initialization before any other calls
+  try {
+      // Ensure MSAL is initialized (safe if already initialized)
+      await pca.initialize();
+      await pca.initialize();
+  } catch (e) {
+    console.warn("MSAL initialize failed:", e);
+  }
+
   // Handle redirect flow (if you decide to use loginRedirect instead of popup)
   try {
     await pca.handleRedirectPromise();
@@ -178,6 +187,8 @@ async function initMicrosoftAuth() {
       return;
     }
     try {
+      // Ensure MSAL is initialized (required for MSAL v3+)
+      await pca.initialize();
       const r = await pca.loginPopup(loginRequest);
       if (r?.account) pca.setActiveAccount(r.account);
       await hydrateUser();
@@ -190,6 +201,7 @@ async function initMicrosoftAuth() {
   async function signOut() {
     const account = pca.getActiveAccount();
     try {
+      await pca.initialize();
       await pca.logoutPopup({ account });
     } catch (e) {
       console.warn("Logout failed:", e);
