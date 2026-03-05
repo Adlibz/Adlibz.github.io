@@ -39,12 +39,12 @@ const AUTH = {
   // 1) Azure portal → Entra ID → App registrations → New registration
   // 2) Platform: Single-page application (SPA)
   // 3) Redirect URI: your GitHub Pages URL (exact)
-  clientId: "PUT-YOUR-CLIENT-ID-HERE",
+  clientId: "5e79f919-ca8a-4884-badf-4b88180831b3",
   // Prefer a tenant-specific authority (recommended) once you know your tenant ID.
   // Examples:
   //  - "https://login.microsoftonline.com/organizations" (any work/school tenant)
   //  - "https://login.microsoftonline.com/<TENANT_ID>" (your org only)
-  authority: "https://login.microsoftonline.com/organizations",
+  authority: "https://login.microsoftonline.com/d4034026-d802-4056-b343-5d4d4731884b",
   // Must match redirect URI configured in the app registration
   redirectUri: window.location.origin + window.location.pathname,
   scopes: ["User.Read"],
