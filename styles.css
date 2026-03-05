@@ -141,12 +141,24 @@ a{color:inherit}
 .authGate__bg{
   position: absolute;
   inset: 0;
-  background:
-    radial-gradient(1200px 600px at 20% 20%, rgba(59,130,246,.22), transparent 60%),
-    radial-gradient(900px 500px at 80% 30%, rgba(212,175,55,.18), transparent 55%),
-    radial-gradient(800px 500px at 50% 80%, rgba(99,102,241,.20), transparent 60%),
-    linear-gradient(180deg, rgba(6,10,24,.94), rgba(6,10,24,.86));
+
+  /* unreadable blur + dim (privacy) */
+  background: rgba(2, 8, 24, 0.90);
+  backdrop-filter: blur(34px) saturate(120%);
+  -webkit-backdrop-filter: blur(34px) saturate(120%);
 }
+
+.authGate__bg::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  background:
+    radial-gradient(900px 520px at 20% 30%, rgba(37, 99, 235, 0.22), transparent 60%),
+    radial-gradient(760px 460px at 75% 42%, rgba(212, 175, 55, 0.18), transparent 55%),
+    linear-gradient(to bottom, rgba(0,0,0,0.30), rgba(0,0,0,0.55));
+}
+
 
 .authGate__wrap{
   position: relative;
@@ -662,3 +674,17 @@ a{color:inherit}
 
 
 body.dark-mode select, body.dark-mode option{color:#fff;background:#101827;}
+
+
+.authGate__bg::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  background-image: url("./resource/images/logo.png");
+  background-repeat: no-repeat;
+  background-position: 12% 18%;
+  background-size: 220px auto;
+  opacity: 0.06;
+  filter: grayscale(100%);
+}
