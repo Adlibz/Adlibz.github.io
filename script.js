@@ -25,3 +25,192 @@ document.addEventListener("DOMContentLoaded", () => {
   const submitBtn = document.querySelector("#zohoSupportWebToCase input[type='submit']");
   if (submitBtn) submitBtn.removeAttribute("disabled");
 });
+
+
+// =========================================================
+// Microsoft Entra ID (Azure AD) Sign-in + Auto-fill
+// - Works on static hosting (GitHub Pages) using MSAL Browser.
+// - After sign-in, auto-fills: First Name, Last Name, Email.
+// - Optional: calls Microsoft Graph (User.Read) for clean givenName/surname.
+// =========================================================
+
+const AUTH = {
+  // TODO: Replace with your Entra ID App Registration values
+  // 1) Azure portal → Entra ID → App registrations → New registration
+  // 2) Platform: Single-page application (SPA)
+  // 3) Redirect URI: your GitHub Pages URL (exact)
+  clientId: "PUT-YOUR-CLIENT-ID-HERE",
+  // Prefer a tenant-specific authority (recommended) once you know your tenant ID.
+  // Examples:
+  //  - "https://login.microsoftonline.com/organizations" (any work/school tenant)
+  //  - "https://login.microsoftonline.com/<TENANT_ID>" (your org only)
+  authority: "https://login.microsoftonline.com/organizations",
+  // Must match redirect URI configured in the app registration
+  redirectUri: window.location.origin + window.location.pathname,
+  scopes: ["User.Read"],
+};
+
+function safeSplitName(fullName) {
+  const s = (fullName || "").trim().replace(/\s+/g, " ");
+  if (!s) return { first: "", last: "" };
+  const parts = s.split(" ");
+  if (parts.length === 1) return { first: parts[0], last: "" };
+  return { first: parts[0], last: parts.slice(1).join(" ") };
+}
+
+function fillZohoIdentityFields({ firstName, lastName, email }) {
+  const form = document.querySelector("#zohoSupportWebToCase form");
+  if (!form) return;
+  const byName = (n) => form.querySelector(`[name="${CSS.escape(n)}"]`);
+
+  const f = byName("First Name");
+  const l = byName("Contact Name");
+  const e = byName("Email");
+
+  if (f && firstName) f.value = firstName;
+  if (l && lastName) l.value = lastName;
+  if (e && email) e.value = email;
+
+  // If you want these fields locked after sign-in, uncomment:
+  // if (f) f.readOnly = true;
+  // if (l) l.readOnly = true;
+  // if (e) e.readOnly = true;
+}
+
+async function graphMe(accessToken) {
+  const res = await fetch("https://graph.microsoft.com/v1.0/me?$select=displayName,givenName,surname,mail,userPrincipalName", {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  if (!res.ok) throw new Error(`Graph /me failed (${res.status})`);
+  return await res.json();
+}
+
+function showGate(show) {
+  const gate = document.getElementById("authGate");
+  if (!gate) return;
+  gate.hidden = !show;
+}
+
+function setSignedInUI({ signedIn, displayName }) {
+  const btnIn = document.getElementById("btnSignIn");
+  const btnOut = document.getElementById("btnSignOut");
+  const pill = document.getElementById("authPill");
+  const name = document.getElementById("authName");
+
+  if (btnIn) btnIn.style.display = signedIn ? "none" : "inline-flex";
+  if (btnOut) btnOut.style.display = signedIn ? "inline-flex" : "none";
+  if (pill) pill.style.display = signedIn ? "inline-flex" : "none";
+  if (name && displayName) name.textContent = displayName;
+}
+
+async function initMicrosoftAuth() {
+  // If MSAL didn't load (network/CDN blocked), do nothing.
+  if (!window.msal || !window.msal.PublicClientApplication) return;
+
+  const msalConfig = {
+    auth: {
+      clientId: AUTH.clientId,
+      authority: AUTH.authority,
+      redirectUri: AUTH.redirectUri,
+    },
+    cache: {
+      cacheLocation: "localStorage",
+      storeAuthStateInCookie: false,
+    },
+  };
+
+  const pca = new window.msal.PublicClientApplication(msalConfig);
+
+  // Handle redirect flow (if you decide to use loginRedirect instead of popup)
+  try {
+    await pca.handleRedirectPromise();
+  } catch (e) {
+    console.warn("MSAL redirect handling failed:", e);
+  }
+
+  const loginRequest = { scopes: AUTH.scopes };
+  const accounts = pca.getAllAccounts();
+  const active = accounts?.[0] || null;
+  if (active) pca.setActiveAccount(active);
+
+  async function hydrateUser() {
+    const account = pca.getActiveAccount();
+    if (!account) {
+      setSignedInUI({ signedIn: false });
+      showGate(true);
+      return;
+    }
+
+    setSignedInUI({ signedIn: true, displayName: account.name || "Signed in" });
+    showGate(false);
+
+    // 1) Basic auto-fill from account object
+    const basic = safeSplitName(account.name);
+    fillZohoIdentityFields({
+      firstName: basic.first,
+      lastName: basic.last,
+      email: account.username,
+    });
+
+    // 2) Better names from Graph (givenName/surname) if possible
+    try {
+      const token = await pca.acquireTokenSilent({ ...loginRequest, account });
+      const me = await graphMe(token.accessToken);
+      const email = me.mail || me.userPrincipalName || account.username;
+      fillZohoIdentityFields({
+        firstName: me.givenName || basic.first,
+        lastName: me.surname || basic.last,
+        email,
+      });
+    } catch (e) {
+      // Silent token can fail if first time; that's okay—basic fill is already done.
+      console.warn("Graph profile fetch skipped:", e);
+    }
+  }
+
+  async function signIn() {
+    // Guard: if clientId is still placeholder, show a helpful alert
+    if (!AUTH.clientId || AUTH.clientId.includes("PUT-YOUR-CLIENT-ID-HERE")) {
+      alert(
+        "Microsoft sign-in is not configured yet.\n\n" +
+          "Please create an Entra ID App Registration and paste its Client ID into script.js (AUTH.clientId)."
+      );
+      return;
+    }
+    try {
+      const r = await pca.loginPopup(loginRequest);
+      if (r?.account) pca.setActiveAccount(r.account);
+      await hydrateUser();
+    } catch (e) {
+      console.warn("Login failed:", e);
+      alert("Sign-in failed or was cancelled.");
+    }
+  }
+
+  async function signOut() {
+    const account = pca.getActiveAccount();
+    try {
+      await pca.logoutPopup({ account });
+    } catch (e) {
+      console.warn("Logout failed:", e);
+    }
+    setSignedInUI({ signedIn: false });
+    showGate(true);
+  }
+
+  // Wire buttons
+  const btnIn = document.getElementById("btnSignIn");
+  const btnOut = document.getElementById("btnSignOut");
+  const btnGate = document.getElementById("btnGateSignIn");
+
+  if (btnIn) btnIn.addEventListener("click", signIn);
+  if (btnGate) btnGate.addEventListener("click", signIn);
+  if (btnOut) btnOut.addEventListener("click", signOut);
+
+  await hydrateUser();
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  // Start auth after the DOM + form are ready
+  initMicrosoftAuth();
+});
