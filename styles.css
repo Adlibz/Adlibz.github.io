@@ -688,3 +688,7 @@ body.dark-mode select, body.dark-mode option{color:#fff;background:#101827;}
   opacity: 0.06;
   filter: grayscale(100%);
 }
+
+
+/* Zoho form: small helper text under Issue Category */
+.zsHintText{font-size:12px;opacity:.75;margin-top:6px;}
