@@ -19,17 +19,39 @@ function $(id) {
   return document.getElementById(id);
 }
 
+function showAuthError(message, code) {
+  const box = $("authError");
+  if (!box) return;
+  const extra = code ? ` <span style="opacity:.8">(${code})</span>` : "";
+  box.innerHTML = `<strong>Sign-in failed</strong>${message}${extra}`;
+  box.hidden = false;
+}
+
+function clearAuthError() {
+  const box = $("authError");
+  if (!box) return;
+  box.hidden = true;
+  box.textContent = "";
+}
+
 function setSignedInUI({ signedIn, name }) {
   const btnIn = $("btnSignIn");
   const btnOut = $("btnSignOut");
   const pill = $("authPill");
   const authName = $("authName");
 
+  const footerUser = $("footerUser");
+  const headerBadge = $("headerBadge");
+
   if (btnIn) btnIn.hidden = signedIn;
   if (btnOut) btnOut.hidden = !signedIn;
   if (pill) pill.hidden = !signedIn;
   if (authName) authName.textContent = name || "Signed in";
+
+  if (footerUser) footerUser.textContent = signedIn ? (name || "Signed in") : "Guest";
+  if (headerBadge) headerBadge.textContent = signedIn ? (name || "Enterprise Solutions") : "Enterprise Solutions";
 }
+
 
 function showGate(show) {
   const gate = $("authGate");
@@ -135,6 +157,7 @@ async function hydrateUser() {
 
 async function signIn() {
   try {
+    clearAuthError();
     await pca.initialize();
     const resp = await pca.loginPopup(loginRequest);
     pca.setActiveAccount(resp.account);
@@ -147,7 +170,7 @@ async function signIn() {
     showGate(false);
   } catch (e) {
     console.error("Login failed:", e);
-    alert("Sign-in failed or was cancelled.");
+    showAuthError("Please try again. If nothing opens, allow pop-ups for this site.", (e && (e.errorCode || e.error)));
   }
 }
 

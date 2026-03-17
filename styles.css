@@ -692,3 +692,45 @@ body.dark-mode select, body.dark-mode option{color:#fff;background:#101827;}
 
 /* Zoho form: small helper text under Issue Category */
 .zsHintText{font-size:12px;opacity:.75;margin-top:6px;}
+
+
+/* --- Branch dropdown group header readability (dark mode) --- */
+#zohoSupportWebToCase select option.optGroup{
+  font-weight: 700;
+  letter-spacing: .02em;
+}
+#zohoSupportWebToCase select option[disabled].optGroup{
+  color: rgba(255,255,255,.75);
+  background: rgba(255,255,255,.08);
+}
+@media (prefers-color-scheme: light){
+  #zohoSupportWebToCase select option[disabled].optGroup{
+    color: rgba(12,26,51,.70);
+    background: rgba(12,26,51,.08);
+  }
+}
+
+
+/* --- Inline auth error (avoid browser alert showing host/IP) --- */
+.authError{
+  margin-top: 12px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  font-size: 14px;
+  line-height: 1.35;
+  color: rgba(255,255,255,0.92);
+  background: rgba(220, 38, 38, 0.14);
+  border: 1px solid rgba(220, 38, 38, 0.35);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+.authError strong{
+  display:block;
+  margin-bottom: 4px;
+  color: rgba(255,255,255,0.98);
+}
+
+.footer__user{
+  color: rgba(255,255,255,0.72);
+  font-size: 13px;
+}

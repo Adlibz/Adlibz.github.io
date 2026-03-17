@@ -51,21 +51,21 @@
           <img class="authHero__logo" src="./resource/images/logo.png" alt="RSSB Logo" />
 <h1 class="authHero__title">RSSB Support Portal</h1>
           <p class="authHero__subtitle">
-            Sign in with your Microsoft account to auto‑fill your details and submit a support request faster.
+            Need help? Log your request here and our IT team will take it from there.
           </p>
 
           <div class="authHero__stats" role="list" aria-label="Benefits">
             <div class="authStat" role="listitem">
-              <div class="authStat__label">Member first</div>
-              <div class="authStat__value">Service focused</div>
+              <div class="authStat__label">Log an issue</div>
+              <div class="authStat__value">Describe your problem</div>
             </div>
             <div class="authStat" role="listitem">
-              <div class="authStat__label">Fast assistance</div>
-              <div class="authStat__value">Quick submission</div>
+              <div class="authStat__label">Attach evidence</div>
+              <div class="authStat__value">Screenshots help</div>
             </div>
             <div class="authStat" role="listitem">
-              <div class="authStat__label">Secure access</div>
-              <div class="authStat__value">Microsoft 365</div>
+              <div class="authStat__label">Get support</div>
+              <div class="authStat__value">IT team follows up</div>
             </div>
           </div>
         </div>
@@ -73,13 +73,13 @@
         <div class="authCard" role="dialog" aria-modal="true" aria-label="Sign in">
           <div class="authCard__header">
             <div class="authCard__badge">Welcome</div>
-            <div class="authCard__h">Continue to support form</div>
+            <div class="authCard__h">Continue to submit a request</div>
             <div class="authCard__p">Use your work account (RSSB Microsoft 365).</div>
           </div>
 
           <button id="btnGateSignIn" class="cta cta--microsoft" type="button">
             <span class="cta__ms" aria-hidden="true"></span>
-            Continue with Microsoft
+            Sign in with Microsoft
             <span class="cta__arrow" aria-hidden="true">→</span>
           </button>
 
@@ -87,9 +87,11 @@
             If sign‑in doesn’t open, allow pop‑ups for this site.
           </div>
 
+          <div id="authError" class="authError" role="alert" aria-live="polite" hidden></div>
+
           <div class="authCard__foot">
             <span class="dot dot--gold" aria-hidden="true"></span>
-            We only use your Microsoft 365 profile to capture your name and email for faster, accurate ticket logging.
+            We use your work account to identify your request and respond faster.
           </div>
         </div>
       </div>
@@ -138,7 +140,7 @@
               <div class="formHeader__title">New Ticket</div>
               <div class="formHeader__subtitle">Fields marked as required must be completed.</div>
             </div>
-            <div class="formHeader__badge">Zoho Desk</div>
+            <div id="headerBadge" class="formHeader__badge">Enterprise Solutions</div>
           </div>
 
           <!-- Zoho embed (form only). Styling is handled by styles.css -->
@@ -149,19 +151,17 @@
     <select name='Branch Name/Location' id='branchLocation' onchange="setDependent(this, false)">
       <option value=''>-None-</option>
 <option value='HQ'>HQ</option>
-<optgroup label='Kigali City'>
+<option value='' disabled class='optGroup'>Kigali City</option>
 <option value='Gasabo'>Gasabo</option>
 <option value='Kicukiro'>Kicukiro</option>
 <option value='Nyarugenge'>Nyarugenge</option>
-</optgroup>
-<optgroup label='Northern Province'>
+<option value='' disabled class='optGroup'>Northern Province</option>
 <option value='Burera'>Burera</option>
 <option value='Gakenke'>Gakenke</option>
 <option value='Gicumbi'>Gicumbi</option>
 <option value='Musanze'>Musanze</option>
 <option value='Rulindo'>Rulindo</option>
-</optgroup>
-<optgroup label='Southern Province'>
+<option value='' disabled class='optGroup'>Southern Province</option>
 <option value='Gisagara'>Gisagara</option>
 <option value='Huye'>Huye</option>
 <option value='Kamonyi'>Kamonyi</option>
@@ -170,8 +170,7 @@
 <option value='Nyanza'>Nyanza</option>
 <option value='Nyaruguru'>Nyaruguru</option>
 <option value='Ruhango'>Ruhango</option>
-</optgroup>
-<optgroup label='Eastern Province'>
+<option value='' disabled class='optGroup'>Eastern Province</option>
 <option value='Bugesera'>Bugesera</option>
 <option value='Gatsibo'>Gatsibo</option>
 <option value='Kayonza'>Kayonza</option>
@@ -179,8 +178,7 @@
 <option value='Ngoma'>Ngoma</option>
 <option value='Nyagatare'>Nyagatare</option>
 <option value='Rwamagana'>Rwamagana</option>
-</optgroup>
-<optgroup label='Western Province'>
+<option value='' disabled class='optGroup'>Western Province</option>
 <option value='Karongi'>Karongi</option>
 <option value='Ngororero'>Ngororero</option>
 <option value='Nyabihu'>Nyabihu</option>
@@ -188,7 +186,6 @@
 <option value='Rubavu'>Rubavu</option>
 <option value='Rusizi'>Rusizi</option>
 <option value='Rutsiro'>Rutsiro</option>
-</optgroup>
     </select>
   </td>
 </tr><tr ><td nowrap class='zsFontClass ' width='25%' align='left'>Phone&nbsp;&nbsp;</td><td align='left' width='75%'><input type='text' maxlength='120' name='Phone' value='' /></td></tr> <tr ><td nowrap class='zsFontClass ' width='25%' align='left'>Email&nbsp;&nbsp;</td><td align='left' width='75%'><input type='text' maxlength='120' name='Email' value='' class='manfieldbdr'/></td></tr> <tr >
@@ -214,7 +211,9 @@
     </main>
 
     <footer class="footer">
-      <div>© <span id="year"></span> • Support Portal</div>
+      <div>© <span id="year"></span> • Enterprise Solutions</div>
+      <div class="footer__sep">•</div>
+      <div class="footer__user">Signed in as <span id="footerUser">Guest</span></div>
       <div class="footer__sep">•</div>
       <div class="footer__hint">If you face issues submitting, try another browser or clear cache.</div>
     </footer>
