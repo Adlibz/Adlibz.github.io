@@ -925,3 +925,39 @@ body.dark-mode select, body.dark-mode option{color:#fff;background:#101827;}
   .workspaceGrid{grid-template-columns:1fr;}
   .workspaceHero{flex-direction:column;}
 }
+
+
+/* --- Final routing + visibility fixes --- */
+[hidden]{
+  display: none !important;
+}
+
+/* Footer readability: keep signed-in user visible in light and dark themes */
+.footer{
+  color: rgba(234,241,255,.74);
+}
+.footer__user,
+.footer__user span{
+  color: rgba(234,241,255,.86);
+  font-weight: 700;
+}
+.footer__hint{
+  color: rgba(234,241,255,.70);
+}
+@media (prefers-color-scheme: light){
+  .footer{
+    color: #53607a;
+  }
+  .footer__user,
+  .footer__user span{
+    color: #21304f;
+    font-weight: 800;
+  }
+  .footer__sep{
+    color: #8a94aa;
+    opacity: 1;
+  }
+  .footer__hint{
+    color: #68738d;
+  }
+}

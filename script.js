@@ -33,26 +33,29 @@ function clearAuthError() {
   box.hidden = true;
   box.textContent = "";
 }
+function setElementHidden(el, hidden) {
+  if (!el) return;
+  el.hidden = hidden;
+  el.style.display = hidden ? "none" : "";
+}
 function showGate(show) {
-  const gate = $("authGate");
-  if (gate) gate.hidden = !show;
+  setElementHidden($("authGate"), !show);
 }
 function hideAllViews() {
   ["workspaceHub", "itSupportView", "cxSupportView"].forEach(id => {
-    const el = $(id);
-    if (el) el.hidden = true;
+    setElementHidden($(id), true);
   });
 }
 function showWorkspace() {
   hideAllViews();
-  const hub = $("workspaceHub");
-  if (hub) hub.hidden = false;
+  setElementHidden($("workspaceHub"), false);
   history.replaceState(null, "", window.location.pathname);
+  window.scrollTo({ top: 0, behavior: "smooth" });
 }
 function showSupportView(type) {
   hideAllViews();
   const target = type === "cx" ? $("cxSupportView") : $("itSupportView");
-  if (target) target.hidden = false;
+  setElementHidden(target, false);
   fillAllZohoFields(currentProfile);
   if (type === "cx") initializeCxDependencies();
   history.replaceState(null, "", `#${type}`);
@@ -140,9 +143,7 @@ async function hydrateUser() {
   fillAllZohoFields(me);
   setSignedInUI({ signedIn: true, name: me.displayName || account.username });
   showGate(false);
-  const hash = (window.location.hash || "").replace("#", "");
-  if (hash === "it" || hash === "cx") showSupportView(hash);
-  else showWorkspace();
+  showWorkspace();
 }
 async function signIn() {
   try {
