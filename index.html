@@ -49,11 +49,7 @@
       <div class="authGate__shell">
         <section class="authWelcome" aria-label="Welcome to RSSB Support Portal">
           <div class="authWelcome__brand" aria-label="RSSB">
-            <img class="authWelcome__logo" src="./resource/images/logo.png" alt="RSSB Logo" />
-            <div class="authWelcome__brandText">
-              <div class="authWelcome__rssb">RSSB</div>
-              <div class="authWelcome__org">Rwanda Social<br/>Security Board</div>
-            </div>
+            <img class="authWelcome__banner" src="./resource/images/clientBanner.svg" alt="RSSB - Rwanda Social Security Board" />
           </div>
 
           <div class="authWelcome__copy">
@@ -71,12 +67,17 @@
           </div>
 
           <div class="authTrustBar authTrustBar--compact" aria-label="Trust information">
-            <div><span class="authTrustBar__icon" aria-hidden="true">🛡️</span><strong>Member First</strong> support, powered by clear request tracking.</div>
+            <div><span class="authTrustBar__icon" aria-hidden="true"><svg viewBox="0 0 24 24" class="miniSvg" focusable="false"><path d="M12 2.5 20 6v5.8c0 5-3.2 8.4-8 9.7-4.8-1.3-8-4.7-8-9.7V6l8-3.5Z"/><path d="m8.2 12.2 2.3 2.3 5.2-5.3" class="miniSvg__line"/></svg></span><strong>Member First</strong> support, powered by clear request tracking.</div>
           </div>
         </section>
 
         <section class="authSignInCard" role="dialog" aria-modal="true" aria-label="Sign in to RSSB Support Portal">
-          <div class="authSignInCard__icon" aria-hidden="true">🤲</div>
+          <div class="authSignInCard__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" class="svgIcon" focusable="false">
+              <path d="M7.8 11.2a3.2 3.2 0 1 1 0-6.4 3.2 3.2 0 0 1 0 6.4Zm8.4 0a3.2 3.2 0 1 1 0-6.4 3.2 3.2 0 0 1 0 6.4ZM2.7 19.8c.7-3 2.9-5.1 5.1-5.1s4.4 2.1 5.1 5.1H2.7Zm8.4-6.1c.8-.7 1.8-1.1 2.9-1.1 2.4 0 4.7 2.1 5.4 5.1h-4.8c-.7-1.8-1.9-3.2-3.5-4Z"/>
+              <path d="M3 20.5h18" class="svgIcon__line"/>
+            </svg>
+          </div>
           <h2>Sign in to continue</h2>
           <div class="authSignInCard__line" aria-hidden="true"></div>
           <p>Use your RSSB Microsoft 365 account to access the support hub.</p>
@@ -90,7 +91,7 @@
           <div class="authSignInCard__safe">Secure and trusted</div>
           <div id="authError" class="authError" role="alert" aria-live="polite" hidden></div>
           <div class="authSignInCard__foot">
-            <span aria-hidden="true">🔒</span>
+            <span class="authSignInCard__footIcon" aria-hidden="true"><svg viewBox="0 0 24 24" class="miniSvg" focusable="false"><path d="M7 10V8a5 5 0 0 1 10 0v2" class="miniSvg__line"/><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M12 14v3" class="miniSvg__line"/></svg></span>
             <span>We use your work account to identify your request and route it correctly.</span>
           </div>
         </section>

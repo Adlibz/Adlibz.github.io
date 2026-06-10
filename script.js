@@ -1,10 +1,17 @@
 /* RSSB Support Portal - Microsoft Entra ID Sign-in + Support Hub */
 
+function getRedirectUri() {
+  const url = new URL(window.location.href);
+  url.search = "";
+  url.hash = "";
+  return url.toString();
+}
+
 const msalConfig = {
   auth: {
     clientId: "5e79f919-ca8a-4884-badf-4b88180831b3",
     authority: "https://login.microsoftonline.com/d4034026-d802-4056-b343-5d4d4731884b",
-    redirectUri: window.location.origin + "/",
+    redirectUri: getRedirectUri(),
   },
   cache: {
     cacheLocation: "localStorage",
@@ -20,15 +27,14 @@ let currentProfile = null;
 
 function $(id) { return document.getElementById(id); }
 
-function showAuthError(message, code) {
+function showAuthError(message) {
   const box = $("authError");
   if (!box) return;
   box.textContent = "";
   const title = document.createElement("strong");
   title.textContent = "Sign-in failed";
   const body = document.createElement("span");
-  const safeMessage = message || "Please try again. If nothing opens, allow pop-ups for this site.";
-  body.textContent = code ? `${safeMessage} (${String(code)})` : safeMessage;
+  body.textContent = message || "Please try again. You may be redirected to Microsoft sign-in.";
   box.append(title, body);
   box.hidden = false;
 }
@@ -176,7 +182,17 @@ async function signIn() {
     showWorkspace();
   } catch (e) {
     console.error("Login failed:", e);
-    showAuthError("Please try again. If nothing opens, allow pop-ups for this site.", (e && (e.errorCode || e.error)));
+    const code = String((e && (e.errorCode || e.error)) || "").toLowerCase();
+    if (code.includes("popup") || code.includes("block") || code.includes("empty_window")) {
+      try {
+        await pca.loginRedirect(loginRequest);
+        return;
+      } catch (redirectError) {
+        console.error("Redirect login failed:", redirectError);
+      }
+    }
+    const cancelled = code.includes("user_cancelled") || code.includes("user_cancel");
+    showAuthError(cancelled ? "Sign-in was cancelled. Please try again when ready." : "Please try again. If the issue persists, contact supportdesk@rssb.rw.");
   }
 }
 async function signOut() {
