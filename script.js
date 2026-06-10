@@ -176,8 +176,18 @@ async function signIn() {
     showGate(false);
     showWorkspace();
   } catch (e) {
-    console.error("Login failed:", e);
-    showAuthError("Please try again. If nothing opens, allow pop-ups for this site.", (e && (e.errorCode || e.error)));
+    console.error("Login popup failed:", e);
+    const code = e && (e.errorCode || e.error);
+    const popupBlocked = ["popup_window_error", "empty_window_error"].includes(String(code));
+    if (popupBlocked) {
+      try {
+        await pca.loginRedirect(loginRequest);
+        return;
+      } catch (redirectError) {
+        console.error("Login redirect failed:", redirectError);
+      }
+    }
+    showAuthError("Please try again. If the sign-in window does not open, allow pop-ups for this site.", code);
   }
 }
 async function signOut() {
