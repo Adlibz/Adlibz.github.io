@@ -1,8 +1,7 @@
 /* RSSB Support Portal - Microsoft Entra ID Sign-in + Support Hub */
-console.info("RSSB Support Portal auth build: msal-popup-blank-redirect-20260610-v5");
+console.info("RSSB Support Portal auth build: msal-popup-main-redirect-20260610-v6");
 
 const appRedirectUri = `${window.location.origin}/`;
-const popupRedirectUri = `${window.location.origin}/auth-blank.html`;
 const AZURE_TENANT_ID = "d4034026-d802-4056-b343-5d4d4731884b";
 const AZURE_CLIENT_ID = "5e79f919-ca8a-4884-badf-4b88180831b3";
 
@@ -23,7 +22,7 @@ const msalConfig = {
   }
 };
 
-const loginRequest = { scopes: ["User.Read"], redirectUri: popupRedirectUri };
+const loginRequest = { scopes: ["User.Read"] };
 const pca = window.msal ? new msal.PublicClientApplication(msalConfig) : null;
 const IT_FORM_ID = "zsWebToCase_1109991000006963130";
 const CX_FORM_ID = "zsWebToCase_1109991000022561407";
@@ -188,13 +187,20 @@ async function completeSignedInSession(account) {
 async function hydrateUser() {
   await ensureMsalReady();
 
-  // This app uses popup authentication. Do not call handleRedirectPromise() on the
-  // main application page because, when the popup redirects back here, the full app
-  // can load inside the popup and consume/clear the hash before MSAL finishes.
-  // That is what causes hash_empty_error. We use auth-blank.html as the popup
-  // redirect page and only hydrate from the cached MSAL account here.
-  if (window.location.hash.includes("code=") || window.location.hash.includes("error=")) {
-    try { history.replaceState({ view: "gate" }, document.title, appRedirectUri); } catch {}
+  // This uses the proven MSAL popup flow that worked in testing.
+  // handleRedirectPromise is kept only to safely clean up any old redirect callbacks
+  // and to recover users who came back from an older redirect-based version.
+  let redirectResp = null;
+  try {
+    redirectResp = await pca.handleRedirectPromise();
+  } catch (redirectError) {
+    console.warn("Microsoft redirect cleanup failed; continuing with cached account.", redirectError);
+  }
+
+  if (redirectResp?.account) {
+    await completeSignedInSession(redirectResp.account);
+    try { history.replaceState({ view: "hub" }, document.title, appRedirectUri); } catch {}
+    return;
   }
 
   const account = pca.getActiveAccount() || pca.getAllAccounts()[0];
@@ -202,15 +208,23 @@ async function hydrateUser() {
     setSignedInUI({ signedIn: false });
     showGate(true);
     hideAllViews();
+    // Clean any stale auth hash left from earlier builds so the page does not look broken.
+    if (window.location.hash.includes("code=") || window.location.hash.includes("error=")) {
+      try { history.replaceState({ view: "gate" }, document.title, appRedirectUri); } catch {}
+    }
     return;
   }
+
   await completeSignedInSession(account);
 }
 async function signIn() {
   try {
     clearAuthError();
     await ensureMsalReady();
-    const resp = await pca.loginPopup({ ...loginRequest, prompt: "select_account" });
+
+    // Proven working flow: MSAL popup on the main app redirect URI.
+    // Do not use custom PKCE or auth-blank here; those caused hash/code handling issues on GitHub Pages.
+    const resp = await pca.loginPopup(loginRequest);
     await completeSignedInSession(resp.account);
   } catch (e) {
     console.error("Login failed:", e);
@@ -220,7 +234,7 @@ async function signIn() {
       message = "Sign-in was cancelled or blocked. Please allow pop-ups for this site and try again.";
     }
     if (String(code).includes("hash_empty_error")) {
-      message = "The Microsoft sign-in window returned without the expected response. Refresh the page and try again. If this continues, confirm the popup redirect URI is registered in Entra.";
+      message = "Microsoft returned an empty sign-in response. Refresh the page, open the clean portal link, and try again. If it continues, contact supportdesk@rssb.rw.";
     }
     showAuthError(message, code);
   }
