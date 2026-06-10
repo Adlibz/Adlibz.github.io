@@ -1,10 +1,16 @@
 /* RSSB Support Portal - Microsoft Entra ID Sign-in + Support Hub */
 
+const redirectPath = window.location.pathname.endsWith("/")
+  ? window.location.pathname
+  : window.location.pathname.replace(/\/[^/]*$/, "/");
+const appRedirectUri = `${window.location.origin}${redirectPath || "/"}`;
+
 const msalConfig = {
   auth: {
     clientId: "5e79f919-ca8a-4884-badf-4b88180831b3",
     authority: "https://login.microsoftonline.com/d4034026-d802-4056-b343-5d4d4731884b",
-    redirectUri: window.location.origin + "/",
+    redirectUri: appRedirectUri,
+    postLogoutRedirectUri: appRedirectUri,
     navigateToLoginRequestUrl: false,
   },
   cache: {
@@ -28,7 +34,7 @@ function showAuthError(message, code) {
   const title = document.createElement("strong");
   title.textContent = "Sign-in failed";
   const body = document.createElement("span");
-  const safeMessage = message || "Please try again. If nothing opens, allow pop-ups for this site.";
+  const safeMessage = message || "Please try again. If sign-in still fails, contact supportdesk@rssb.rw.";
   body.textContent = code ? `${safeMessage} (${String(code)})` : safeMessage;
   box.append(title, body);
   box.hidden = false;
@@ -136,17 +142,25 @@ async function acquireToken(account) {
   try {
     return await pca.acquireTokenSilent({ ...loginRequest, account });
   } catch (e) {
-    return await pca.acquireTokenPopup(loginRequest);
+    console.warn("Silent token acquisition failed; redirecting to Microsoft for a fresh token.", e);
+    await pca.acquireTokenRedirect({ ...loginRequest, account });
+    return null;
   }
 }
 async function hydrateUser() {
   await pca.initialize();
-  const redirectResp = await pca.handleRedirectPromise().catch(() => null);
+  const redirectResp = await pca.handleRedirectPromise().catch((e) => {
+    console.warn("Microsoft redirect handling failed:", e);
+    showAuthError("Please try again. If sign-in still fails, contact supportdesk@rssb.rw.", e?.errorCode || e?.error);
+    return null;
+  });
+
   if (redirectResp?.account) pca.setActiveAccount(redirectResp.account);
   else {
     const accounts = pca.getAllAccounts();
     if (accounts.length) pca.setActiveAccount(accounts[0]);
   }
+
   const account = pca.getActiveAccount();
   if (!account) {
     setSignedInUI({ signedIn: false });
@@ -154,7 +168,10 @@ async function hydrateUser() {
     hideAllViews();
     return;
   }
-  const token = await acquireToken(account);
+
+  const token = redirectResp?.accessToken ? redirectResp : await acquireToken(account);
+  if (!token?.accessToken) return;
+
   const me = await graphMe(token.accessToken);
   currentProfile = me;
   fillAllZohoFields(me);
@@ -166,28 +183,12 @@ async function signIn() {
   try {
     clearAuthError();
     await pca.initialize();
-    const resp = await pca.loginPopup(loginRequest);
-    pca.setActiveAccount(resp.account);
-    const token = await acquireToken(resp.account);
-    const me = await graphMe(token.accessToken);
-    currentProfile = me;
-    fillAllZohoFields(me);
-    setSignedInUI({ signedIn: true, name: me.displayName || resp.account.username });
-    showGate(false);
-    showWorkspace();
+    // Redirect sign-in is more reliable on GitHub Pages and avoids popup blockers.
+    await pca.loginRedirect(loginRequest);
   } catch (e) {
-    console.error("Login popup failed:", e);
+    console.error("Microsoft sign-in failed:", e);
     const code = e && (e.errorCode || e.error);
-    const popupBlocked = ["popup_window_error", "empty_window_error"].includes(String(code));
-    if (popupBlocked) {
-      try {
-        await pca.loginRedirect(loginRequest);
-        return;
-      } catch (redirectError) {
-        console.error("Login redirect failed:", redirectError);
-      }
-    }
-    showAuthError("Please try again. If the sign-in window does not open, allow pop-ups for this site.", code);
+    showAuthError("Please try again. If sign-in still fails, contact supportdesk@rssb.rw.", code);
   }
 }
 async function signOut() {
