@@ -19,7 +19,7 @@ const msalConfig = {
   },
 };
 
-const loginRequest = { scopes: ["User.Read"] };
+const loginRequest = { scopes: ["User.Read"], redirectUri: appRedirectUri, prompt: "select_account" };
 const pca = new msal.PublicClientApplication(msalConfig);
 const IT_FORM_ID = "zsWebToCase_1109991000006963130";
 const CX_FORM_ID = "zsWebToCase_1109991000022561407";
@@ -138,6 +138,18 @@ async function graphMe(accessToken) {
   if (!res.ok) throw new Error("Unable to read profile from Microsoft Graph.");
   return res.json();
 }
+function profileFromAccount(account) {
+  const claims = account?.idTokenClaims || {};
+  const displayName = claims.name || account?.name || account?.username || "RSSB User";
+  const parts = String(displayName).trim().split(/\s+/);
+  return {
+    displayName,
+    givenName: claims.given_name || parts[0] || "",
+    surname: claims.family_name || parts.slice(1).join(" ") || "",
+    mail: claims.email || claims.preferred_username || account?.username || "",
+    userPrincipalName: claims.preferred_username || account?.username || ""
+  };
+}
 async function acquireToken(account) {
   try {
     return await pca.acquireTokenSilent({ ...loginRequest, account });
@@ -149,33 +161,54 @@ async function acquireToken(account) {
 }
 async function hydrateUser() {
   await pca.initialize();
-  const redirectResp = await pca.handleRedirectPromise().catch((e) => {
-    console.warn("Microsoft redirect handling failed:", e);
-    showAuthError("Please try again. If sign-in still fails, contact supportdesk@rssb.rw.", e?.errorCode || e?.error);
-    return null;
-  });
 
-  if (redirectResp?.account) pca.setActiveAccount(redirectResp.account);
-  else {
+  let redirectResp = null;
+  const hash = window.location.hash || "";
+
+  try {
+    // Passing the hash explicitly makes GitHub Pages / static hosting redirect handling more reliable.
+    redirectResp = await pca.handleRedirectPromise(hash || undefined);
+  } catch (e) {
+    console.warn("Microsoft redirect handling failed:", e);
+    showAuthError("Microsoft sign-in returned, but the portal could not complete the session. Please try again or contact supportdesk@rssb.rw.", e?.errorCode || e?.error);
+    return;
+  }
+
+  if (redirectResp?.account) {
+    pca.setActiveAccount(redirectResp.account);
+  } else {
     const accounts = pca.getAllAccounts();
     if (accounts.length) pca.setActiveAccount(accounts[0]);
   }
 
   const account = pca.getActiveAccount();
   if (!account) {
+    // If Microsoft returned a code but MSAL could not match it to the stored request, show a clear message.
+    if (hash.includes("code=")) {
+      showAuthError("Microsoft sign-in returned, but the session could not be completed. Please open this site normally, allow storage/cookies for adlibz.github.io, then try again.", "redirect_not_processed");
+    }
     setSignedInUI({ signedIn: false });
     showGate(true);
     hideAllViews();
     return;
   }
 
-  const token = redirectResp?.accessToken ? redirectResp : await acquireToken(account);
-  if (!token?.accessToken) return;
+  let me = profileFromAccount(account);
 
-  const me = await graphMe(token.accessToken);
+  try {
+    const token = redirectResp?.accessToken ? redirectResp : await acquireToken(account);
+    if (token?.accessToken) {
+      me = await graphMe(token.accessToken);
+    }
+  } catch (e) {
+    // Do not block the portal if Graph profile lookup fails. Use ID token/account values instead.
+    console.warn("Profile lookup failed; using signed-in account details instead:", e);
+  }
+
   currentProfile = me;
   fillAllZohoFields(me);
   setSignedInUI({ signedIn: true, name: me.displayName || account.username });
+  clearAuthError();
   showGate(false);
   showWorkspace();
 }
@@ -183,8 +216,12 @@ async function signIn() {
   try {
     clearAuthError();
     await pca.initialize();
-    // Redirect sign-in is more reliable on GitHub Pages and avoids popup blockers.
-    await pca.loginRedirect(loginRequest);
+    await pca.loginRedirect({
+      ...loginRequest,
+      redirectUri: appRedirectUri,
+      redirectStartPage: appRedirectUri,
+      prompt: "select_account"
+    });
   } catch (e) {
     console.error("Microsoft sign-in failed:", e);
     const code = e && (e.errorCode || e.error);
@@ -406,7 +443,7 @@ window.addEventListener("pageshow", () => {
   [IT_FORM_ID, CX_FORM_ID].forEach(id => getForm(id)?.querySelector("input[type='submit']")?.removeAttribute("disabled"));
 });
 
-document.addEventListener("DOMContentLoaded", () => {
+function initApp() {
   const currentYear = new Date().getFullYear();
   const y = $("year");
   const ay = $("authYear");
@@ -439,4 +476,10 @@ document.addEventListener("DOMContentLoaded", () => {
     hideAllViews();
     showGate(true);
   });
-});
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initApp);
+} else {
+  initApp();
+}
