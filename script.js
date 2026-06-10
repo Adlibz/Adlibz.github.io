@@ -1,29 +1,24 @@
 /* RSSB Support Portal - Microsoft Entra ID Sign-in + Support Hub */
-console.info("RSSB Support Portal auth build: msal-popup-main-redirect-20260610-v6");
+console.info("RSSB Support Portal auth build: WORKING-msal-popup-original-auth-20260610-v8");
 
+// IMPORTANT: This restores the exact authentication pattern from the version that worked.
+// Do not replace this with custom PKCE or auth-blank callback unless there is a backend reason.
 const appRedirectUri = `${window.location.origin}/`;
-const AZURE_TENANT_ID = "d4034026-d802-4056-b343-5d4d4731884b";
-const AZURE_CLIENT_ID = "5e79f919-ca8a-4884-badf-4b88180831b3";
 
 const msalConfig = {
   auth: {
-    clientId: AZURE_CLIENT_ID,
-    authority: `https://login.microsoftonline.com/${AZURE_TENANT_ID}`,
+    clientId: "5e79f919-ca8a-4884-badf-4b88180831b3",
+    authority: "https://login.microsoftonline.com/d4034026-d802-4056-b343-5d4d4731884b",
     redirectUri: appRedirectUri,
-    postLogoutRedirectUri: appRedirectUri,
-    navigateToLoginRequestUrl: false,
   },
   cache: {
     cacheLocation: "localStorage",
     storeAuthStateInCookie: true,
   },
-  system: {
-    allowNativeBroker: false,
-  }
 };
 
 const loginRequest = { scopes: ["User.Read"] };
-const pca = window.msal ? new msal.PublicClientApplication(msalConfig) : null;
+const pca = new msal.PublicClientApplication(msalConfig);
 const IT_FORM_ID = "zsWebToCase_1109991000006963130";
 const CX_FORM_ID = "zsWebToCase_1109991000022561407";
 let currentProfile = null;
@@ -162,88 +157,56 @@ async function ensureMsalReady() {
 async function acquireToken(account) {
   try {
     return await pca.acquireTokenSilent({ ...loginRequest, account });
-  } catch (silentError) {
-    console.warn("Silent token acquisition failed; trying popup.", silentError);
-    return await pca.acquireTokenPopup({ ...loginRequest, account });
+  } catch (e) {
+    return await pca.acquireTokenPopup(loginRequest);
   }
-}
-async function completeSignedInSession(account) {
-  if (!account) throw Object.assign(new Error("No Microsoft account was returned."), { errorCode: "no_account" });
-  pca.setActiveAccount(account);
-  let profile = profileFromAccount(account);
-  try {
-    const token = await acquireToken(account);
-    if (token?.accessToken) profile = await graphMe(token.accessToken);
-  } catch (profileError) {
-    console.warn("Microsoft Graph profile lookup failed; using account claims instead.", profileError);
-  }
-  currentProfile = profile;
-  fillAllZohoFields(profile);
-  setSignedInUI({ signedIn: true, name: profile.displayName || profile.userPrincipalName || account.username || "RSSB User" });
-  clearAuthError();
-  showGate(false);
-  showWorkspace({ updateHistory: true, scroll: false });
 }
 async function hydrateUser() {
-  await ensureMsalReady();
-
-  // This uses the proven MSAL popup flow that worked in testing.
-  // handleRedirectPromise is kept only to safely clean up any old redirect callbacks
-  // and to recover users who came back from an older redirect-based version.
-  let redirectResp = null;
-  try {
-    redirectResp = await pca.handleRedirectPromise();
-  } catch (redirectError) {
-    console.warn("Microsoft redirect cleanup failed; continuing with cached account.", redirectError);
+  await pca.initialize();
+  const redirectResp = await pca.handleRedirectPromise().catch(() => null);
+  if (redirectResp?.account) pca.setActiveAccount(redirectResp.account);
+  else {
+    const accounts = pca.getAllAccounts();
+    if (accounts.length) pca.setActiveAccount(accounts[0]);
   }
-
-  if (redirectResp?.account) {
-    await completeSignedInSession(redirectResp.account);
-    try { history.replaceState({ view: "hub" }, document.title, appRedirectUri); } catch {}
-    return;
-  }
-
-  const account = pca.getActiveAccount() || pca.getAllAccounts()[0];
+  const account = pca.getActiveAccount();
   if (!account) {
     setSignedInUI({ signedIn: false });
     showGate(true);
     hideAllViews();
-    // Clean any stale auth hash left from earlier builds so the page does not look broken.
-    if (window.location.hash.includes("code=") || window.location.hash.includes("error=")) {
-      try { history.replaceState({ view: "gate" }, document.title, appRedirectUri); } catch {}
-    }
     return;
   }
-
-  await completeSignedInSession(account);
+  const token = await acquireToken(account);
+  const me = await graphMe(token.accessToken);
+  currentProfile = me;
+  fillAllZohoFields(me);
+  setSignedInUI({ signedIn: true, name: me.displayName || account.username });
+  showGate(false);
+  showWorkspace({ updateHistory: true, scroll: false });
 }
 async function signIn() {
   try {
     clearAuthError();
-    await ensureMsalReady();
-
-    // Proven working flow: MSAL popup on the main app redirect URI.
-    // Do not use custom PKCE or auth-blank here; those caused hash/code handling issues on GitHub Pages.
+    await pca.initialize();
     const resp = await pca.loginPopup(loginRequest);
-    await completeSignedInSession(resp.account);
+    pca.setActiveAccount(resp.account);
+    const token = await acquireToken(resp.account);
+    const me = await graphMe(token.accessToken);
+    currentProfile = me;
+    fillAllZohoFields(me);
+    setSignedInUI({ signedIn: true, name: me.displayName || resp.account.username });
+    showGate(false);
+    showWorkspace({ updateHistory: true, scroll: false });
   } catch (e) {
     console.error("Login failed:", e);
-    const code = e?.errorCode || e?.error || e?.name || "login_failed";
-    let message = "Please try again. If nothing opens, allow pop-ups for this site or contact supportdesk@rssb.rw.";
-    if (String(code).includes("popup") || String(code).includes("user_cancelled")) {
-      message = "Sign-in was cancelled or blocked. Please allow pop-ups for this site and try again.";
-    }
-    if (String(code).includes("hash_empty_error")) {
-      message = "Microsoft returned an empty sign-in response. Refresh the page, open the clean portal link, and try again. If it continues, contact supportdesk@rssb.rw.";
-    }
-    showAuthError(message, code);
+    showAuthError("Please try again. If nothing opens, allow pop-ups for this site or contact supportdesk@rssb.rw.", (e && (e.errorCode || e.error)));
   }
 }
 async function signOut() {
   try {
-    await ensureMsalReady();
-    const account = pca.getActiveAccount() || pca.getAllAccounts()[0];
-    if (account) await pca.logoutPopup({ account, postLogoutRedirectUri: appRedirectUri });
+    await pca.initialize();
+    const account = pca.getActiveAccount();
+    await pca.logoutPopup({ account });
   } catch (e) {
     console.warn("Sign out failed:", e);
   } finally {
@@ -251,7 +214,6 @@ async function signOut() {
     setSignedInUI({ signedIn: false });
     hideAllViews();
     showGate(true);
-    try { history.replaceState({ view: "gate" }, document.title, appRedirectUri); } catch {}
   }
 }
 
@@ -456,6 +418,12 @@ window.addEventListener("pageshow", () => {
 });
 
 document.addEventListener("DOMContentLoaded", () => {
+  if (isMsalPopupCallback) {
+    // Critical: keep the callback page quiet so the parent loginPopup can read the response.
+    document.body.innerHTML = '<div style="font-family:system-ui,sans-serif;padding:24px;color:#1f2a5c">Completing Microsoft sign-in...</div>';
+    return;
+  }
+
   const currentYear = new Date().getFullYear();
   const y = $("year");
   const ay = $("authYear");
