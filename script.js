@@ -1,7 +1,8 @@
 /* RSSB Support Portal - Microsoft Entra ID Sign-in + Support Hub */
-console.info("RSSB Support Portal auth build: msal-popup-restored-20260610-v4");
+console.info("RSSB Support Portal auth build: msal-popup-blank-redirect-20260610-v5");
 
 const appRedirectUri = `${window.location.origin}/`;
+const popupRedirectUri = `${window.location.origin}/auth-blank.html`;
 const AZURE_TENANT_ID = "d4034026-d802-4056-b343-5d4d4731884b";
 const AZURE_CLIENT_ID = "5e79f919-ca8a-4884-badf-4b88180831b3";
 
@@ -22,7 +23,7 @@ const msalConfig = {
   }
 };
 
-const loginRequest = { scopes: ["User.Read"] };
+const loginRequest = { scopes: ["User.Read"], redirectUri: popupRedirectUri };
 const pca = window.msal ? new msal.PublicClientApplication(msalConfig) : null;
 const IT_FORM_ID = "zsWebToCase_1109991000006963130";
 const CX_FORM_ID = "zsWebToCase_1109991000022561407";
@@ -187,17 +188,13 @@ async function completeSignedInSession(account) {
 async function hydrateUser() {
   await ensureMsalReady();
 
-  try {
-    const redirectResp = await pca.handleRedirectPromise();
-    if (redirectResp?.account) {
-      await completeSignedInSession(redirectResp.account);
-      return;
-    }
-  } catch (redirectError) {
-    console.warn("MSAL redirect response ignored. Using popup/session flow.", redirectError);
-    if (window.location.hash.includes("code=") || window.location.hash.includes("error=")) {
-      history.replaceState({ view: "gate" }, document.title, appRedirectUri);
-    }
+  // This app uses popup authentication. Do not call handleRedirectPromise() on the
+  // main application page because, when the popup redirects back here, the full app
+  // can load inside the popup and consume/clear the hash before MSAL finishes.
+  // That is what causes hash_empty_error. We use auth-blank.html as the popup
+  // redirect page and only hydrate from the cached MSAL account here.
+  if (window.location.hash.includes("code=") || window.location.hash.includes("error=")) {
+    try { history.replaceState({ view: "gate" }, document.title, appRedirectUri); } catch {}
   }
 
   const account = pca.getActiveAccount() || pca.getAllAccounts()[0];
@@ -221,6 +218,9 @@ async function signIn() {
     let message = "Please try again. If nothing opens, allow pop-ups for this site or contact supportdesk@rssb.rw.";
     if (String(code).includes("popup") || String(code).includes("user_cancelled")) {
       message = "Sign-in was cancelled or blocked. Please allow pop-ups for this site and try again.";
+    }
+    if (String(code).includes("hash_empty_error")) {
+      message = "The Microsoft sign-in window returned without the expected response. Refresh the page and try again. If this continues, confirm the popup redirect URI is registered in Entra.";
     }
     showAuthError(message, code);
   }
