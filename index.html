@@ -48,35 +48,50 @@
 
       <div class="authGate__shell">
         <section class="authWelcome" aria-label="Welcome to RSSB Support Portal">
-          <div class="authWelcome__brand" aria-label="RSSB">
-            <img class="authWelcome__banner" src="./resource/images/clientBanner.svg" alt="RSSB - Rwanda Social Security Board" />
+          <div class="authWelcome__brand" aria-label="RSSB Support Portal">
+            <span class="authWelcome__logoWrap" aria-hidden="true">
+              <img class="authWelcome__logo" src="./resource/images/logo.png" alt="" />
+            </span>
+            <div class="authWelcome__brandText">
+              <div class="authWelcome__portalName">Support Portal</div>
+              <div class="authWelcome__portalSub">For internal use only · All departments</div>
+            </div>
           </div>
 
           <div class="authWelcome__copy">
             <h1 class="authWelcome__title"><span>Support</span> made simple</h1>
-            <p class="authWelcome__subtitle">Log your request, attach supporting files, and choose the right support channel after signing in.</p>
+            <p class="authWelcome__subtitle">Submit your request through the right support channel and help us serve you faster.</p>
           </div>
 
           <div class="authWelcome__howTitle">How it works</div>
           <div class="authFlow" aria-label="How the support portal works">
-            <span><strong>Log request</strong></span>
+            <span>
+              <svg viewBox="0 0 24 24" class="authFlow__icon" focusable="false" aria-hidden="true"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v5h5"/><path d="M8.5 15.3 13.8 10l2.2 2.2-5.3 5.3-2.8.6z"/></svg>
+              <strong>Log request</strong>
+            </span>
             <span class="authFlow__arrow" aria-hidden="true">→</span>
-            <span><strong>Attach evidence</strong></span>
+            <span>
+              <svg viewBox="0 0 24 24" class="authFlow__icon" focusable="false" aria-hidden="true"><path d="M8.8 12.2 13.9 7a3.2 3.2 0 0 1 4.6 4.5l-6.9 6.9a4.6 4.6 0 0 1-6.5-6.5l6.6-6.6"/></svg>
+              <strong>Attach evidence</strong>
+            </span>
             <span class="authFlow__arrow" aria-hidden="true">→</span>
-            <span><strong>Submit</strong></span>
+            <span>
+              <svg viewBox="0 0 24 24" class="authFlow__icon" focusable="false" aria-hidden="true"><path d="M21 3 10.5 13.5"/><path d="m21 3-6.5 18-4-7-7-4z"/></svg>
+              <strong>Submit</strong>
+            </span>
           </div>
 
-          <div class="authTrustBar authTrustBar--compact" aria-label="Trust information">
-            <div><span class="authTrustBar__icon" aria-hidden="true"><svg viewBox="0 0 24 24" class="miniSvg" focusable="false"><path d="M12 2.5 20 6v5.8c0 5-3.2 8.4-8 9.7-4.8-1.3-8-4.7-8-9.7V6l8-3.5Z"/><path d="m8.2 12.2 2.3 2.3 5.2-5.3" class="miniSvg__line"/></svg></span><strong>Member First</strong> support, powered by clear request tracking.</div>
+          <div class="authTrustLine" aria-label="Trust information">
+            <span class="authTrustLine__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" focusable="false"><path d="M12 2.8 19 6v5.2c0 4.5-2.8 7.9-7 9.7-4.2-1.8-7-5.2-7-9.7V6z"/><path d="m8.5 12.1 2.2 2.2 4.8-5"/></svg>
+            </span>
+            <span><strong>Member First support</strong> · Secure access · Clear request tracking</span>
           </div>
         </section>
 
         <section class="authSignInCard" role="dialog" aria-modal="true" aria-label="Sign in to RSSB Support Portal">
           <div class="authSignInCard__icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" class="svgIcon" focusable="false">
-              <path d="M7.8 11.2a3.2 3.2 0 1 1 0-6.4 3.2 3.2 0 0 1 0 6.4Zm8.4 0a3.2 3.2 0 1 1 0-6.4 3.2 3.2 0 0 1 0 6.4ZM2.7 19.8c.7-3 2.9-5.1 5.1-5.1s4.4 2.1 5.1 5.1H2.7Zm8.4-6.1c.8-.7 1.8-1.1 2.9-1.1 2.4 0 4.7 2.1 5.4 5.1h-4.8c-.7-1.8-1.9-3.2-3.5-4Z"/>
-              <path d="M3 20.5h18" class="svgIcon__line"/>
-            </svg>
+            <svg viewBox="0 0 24 24" focusable="false"><path d="M7.8 11.2a3.2 3.2 0 1 1 0-6.4 3.2 3.2 0 0 1 0 6.4Zm8.4 0a3.2 3.2 0 1 1 0-6.4 3.2 3.2 0 0 1 0 6.4Z"/><path d="M3 20c.7-3.2 2.9-5.2 5.2-5.2s4.5 2 5.2 5.2H3Zm10.6-4.7c.7-.4 1.5-.6 2.3-.6 2.4 0 4.7 2 5.2 5.2h-5.2"/></svg>
           </div>
           <h2>Sign in to continue</h2>
           <div class="authSignInCard__line" aria-hidden="true"></div>
@@ -91,14 +106,16 @@
           <div class="authSignInCard__safe">Secure and trusted</div>
           <div id="authError" class="authError" role="alert" aria-live="polite" hidden></div>
           <div class="authSignInCard__foot">
-            <span class="authSignInCard__footIcon" aria-hidden="true"><svg viewBox="0 0 24 24" class="miniSvg" focusable="false"><path d="M7 10V8a5 5 0 0 1 10 0v2" class="miniSvg__line"/><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M12 14v3" class="miniSvg__line"/></svg></span>
+            <span class="authSignInCard__footIcon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" focusable="false"><path d="M7 10V8a5 5 0 0 1 10 0v2"/><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M12 14v3"/></svg>
+            </span>
             <span>We use your work account to identify your request and route it correctly.</span>
           </div>
         </section>
       </div>
 
       <footer class="authFooter" aria-label="Portal footer">
-        <div class="authFooter__brand">RSSB Support Portal</div>
+        <div class="authFooter__brand">Support Portal</div>
         <div class="authFooter__links">For internal use only · All departments</div>
         <div>© <span id="authYear"></span> Rwanda Social Security Board. All rights reserved.</div>
       </footer>
