@@ -1,17 +1,29 @@
 /* RSSB Support Portal - Microsoft Entra ID Sign-in + Support Hub */
+console.info("RSSB Support Portal auth build: msal-popup-restored-20260610-v4");
 
-const redirectPath = window.location.pathname.endsWith("/")
-  ? window.location.pathname
-  : window.location.pathname.replace(/\/[^/]*$/, "/");
-const appRedirectUri = `${window.location.origin}${redirectPath || "/"}`;
-
+const appRedirectUri = `${window.location.origin}/`;
 const AZURE_TENANT_ID = "d4034026-d802-4056-b343-5d4d4731884b";
 const AZURE_CLIENT_ID = "5e79f919-ca8a-4884-badf-4b88180831b3";
-const AUTHORITY = `https://login.microsoftonline.com/${AZURE_TENANT_ID}/oauth2/v2.0`;
-const AUTH_SCOPES = "openid profile email User.Read";
-const SESSION_KEY = "rssb_support_portal_session_v2";
-const PKCE_KEY = "rssb_support_portal_pkce_v2";
 
+const msalConfig = {
+  auth: {
+    clientId: AZURE_CLIENT_ID,
+    authority: `https://login.microsoftonline.com/${AZURE_TENANT_ID}`,
+    redirectUri: appRedirectUri,
+    postLogoutRedirectUri: appRedirectUri,
+    navigateToLoginRequestUrl: false,
+  },
+  cache: {
+    cacheLocation: "localStorage",
+    storeAuthStateInCookie: true,
+  },
+  system: {
+    allowNativeBroker: false,
+  }
+};
+
+const loginRequest = { scopes: ["User.Read"] };
+const pca = window.msal ? new msal.PublicClientApplication(msalConfig) : null;
 const IT_FORM_ID = "zsWebToCase_1109991000006963130";
 const CX_FORM_ID = "zsWebToCase_1109991000022561407";
 let currentProfile = null;
@@ -122,83 +134,6 @@ function fillAllZohoFields(profile) {
   fillFormFields(CX_FORM_ID, profile);
 }
 
-function randomBase64Url(bytes = 32) {
-  const values = new Uint8Array(bytes);
-  crypto.getRandomValues(values);
-  return base64UrlFromBytes(values);
-}
-function base64UrlFromBytes(bytes) {
-  let binary = "";
-  bytes.forEach(b => { binary += String.fromCharCode(b); });
-  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
-}
-async function sha256Base64Url(value) {
-  const data = new TextEncoder().encode(value);
-  const digest = await crypto.subtle.digest("SHA-256", data);
-  return base64UrlFromBytes(new Uint8Array(digest));
-}
-function safeJsonParse(value) {
-  try { return JSON.parse(value); } catch { return null; }
-}
-function getPkcePayload() {
-  return safeJsonParse(sessionStorage.getItem(PKCE_KEY)) || safeJsonParse(localStorage.getItem(PKCE_KEY));
-}
-function setPkcePayload(payload) {
-  const text = JSON.stringify(payload);
-  sessionStorage.setItem(PKCE_KEY, text);
-  localStorage.setItem(PKCE_KEY, text);
-}
-function clearPkcePayload() {
-  sessionStorage.removeItem(PKCE_KEY);
-  localStorage.removeItem(PKCE_KEY);
-}
-function clearStoredSession() {
-  localStorage.removeItem(SESSION_KEY);
-  clearPkcePayload();
-}
-function getStoredProfile() {
-  const session = safeJsonParse(localStorage.getItem(SESSION_KEY));
-  if (!session || !session.profile) return null;
-  if (session.expiresAt && Date.now() > session.expiresAt) {
-    localStorage.removeItem(SESSION_KEY);
-    return null;
-  }
-  return session.profile;
-}
-function storeProfile(profile, expiresInSeconds = 3600) {
-  localStorage.setItem(SESSION_KEY, JSON.stringify({
-    profile,
-    expiresAt: Date.now() + Math.max(600, expiresInSeconds - 300) * 1000,
-  }));
-}
-function parseAuthParams() {
-  const params = new URLSearchParams();
-  const hash = window.location.hash && window.location.hash.startsWith("#") ? window.location.hash.slice(1) : window.location.hash;
-  const search = window.location.search && window.location.search.startsWith("?") ? window.location.search.slice(1) : window.location.search;
-  [hash, search].filter(Boolean).forEach(part => {
-    new URLSearchParams(part).forEach((value, key) => params.set(key, value));
-  });
-  return params;
-}
-function decodeJwtPayload(token) {
-  const part = String(token || "").split(".")[1];
-  if (!part) return {};
-  const padded = part.replace(/-/g, "+").replace(/_/g, "/") + "===".slice((part.length + 3) % 4);
-  const binary = atob(padded);
-  const bytes = Uint8Array.from(binary, c => c.charCodeAt(0));
-  return JSON.parse(new TextDecoder().decode(bytes));
-}
-function profileFromClaims(claims = {}) {
-  const displayName = claims.name || claims.preferred_username || "RSSB User";
-  const parts = String(displayName).trim().split(/\s+/);
-  return {
-    displayName,
-    givenName: claims.given_name || parts[0] || "",
-    surname: claims.family_name || parts.slice(1).join(" ") || "",
-    mail: claims.email || claims.preferred_username || claims.upn || "",
-    userPrincipalName: claims.preferred_username || claims.upn || claims.email || "",
-  };
-}
 async function graphMe(accessToken) {
   const res = await fetch("https://graph.microsoft.com/v1.0/me?$select=displayName,givenName,surname,mail,userPrincipalName", {
     headers: { Authorization: `Bearer ${accessToken}` }
@@ -206,133 +141,104 @@ async function graphMe(accessToken) {
   if (!res.ok) throw new Error("Unable to read profile from Microsoft Graph.");
   return res.json();
 }
-async function exchangeAuthorizationCode(code, verifier) {
-  const body = new URLSearchParams({
-    client_id: AZURE_CLIENT_ID,
-    grant_type: "authorization_code",
-    code,
-    redirect_uri: appRedirectUri,
-    code_verifier: verifier,
-    scope: AUTH_SCOPES,
-  });
-  const res = await fetch(`${AUTHORITY}/token`, {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body,
-  });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    const codeText = data.error || "token_exchange_failed";
-    const desc = data.error_description || "Microsoft returned the sign-in code, but the portal could not exchange it for a session.";
-    throw Object.assign(new Error(desc), { errorCode: codeText });
-  }
-  return data;
+function profileFromAccount(account) {
+  const claims = account?.idTokenClaims || {};
+  const displayName = claims.name || account?.name || account?.username || "RSSB User";
+  const parts = String(displayName).trim().split(/\s+/);
+  return {
+    displayName,
+    givenName: claims.given_name || parts[0] || "",
+    surname: claims.family_name || parts.slice(1).join(" ") || "",
+    mail: claims.email || claims.preferred_username || account?.username || "",
+    userPrincipalName: claims.preferred_username || account?.username || claims.upn || "",
+  };
 }
-async function processMicrosoftReturn() {
-  const params = parseAuthParams();
-  if (params.has("error")) {
-    throw Object.assign(new Error(params.get("error_description") || "Microsoft sign-in was cancelled or failed."), { errorCode: params.get("error") });
+async function ensureMsalReady() {
+  if (!pca) {
+    throw Object.assign(new Error("Microsoft sign-in library did not load. Please refresh the page or contact supportdesk@rssb.rw."), { errorCode: "msal_not_loaded" });
   }
-  const code = params.get("code");
-  if (!code) return null;
-
-  const state = params.get("state");
-  const pkce = getPkcePayload();
-  if (!pkce?.codeVerifier || !pkce?.state || state !== pkce.state) {
-    throw Object.assign(new Error("The sign-in session expired. Please try again."), { errorCode: "auth_state_mismatch" });
-  }
-
-  const token = await exchangeAuthorizationCode(code, pkce.codeVerifier);
-  clearPkcePayload();
-  history.replaceState({ view: "hub" }, document.title, appRedirectUri);
-
-  const claims = decodeJwtPayload(token.id_token);
-  if (pkce.nonce && claims.nonce && claims.nonce !== pkce.nonce) {
-    throw Object.assign(new Error("The Microsoft sign-in response could not be verified."), { errorCode: "nonce_mismatch" });
-  }
-
-  let profile = profileFromClaims(claims);
-  if (token.access_token) {
-    try { profile = await graphMe(token.access_token); }
-    catch (e) { console.warn("Graph profile lookup failed; using ID token profile instead.", e); }
-  }
-  storeProfile(profile, Number(token.expires_in || 3600));
-  return profile;
+  await pca.initialize();
 }
-async function startMicrosoftSignIn() {
-  if (!window.isSecureContext) {
-    showAuthError("Please open the portal using HTTPS before signing in.", "https_required");
-    return;
+async function acquireToken(account) {
+  try {
+    return await pca.acquireTokenSilent({ ...loginRequest, account });
+  } catch (silentError) {
+    console.warn("Silent token acquisition failed; trying popup.", silentError);
+    return await pca.acquireTokenPopup({ ...loginRequest, account });
   }
-  const codeVerifier = randomBase64Url(64);
-  const state = randomBase64Url(24);
-  const nonce = randomBase64Url(24);
-  const codeChallenge = await sha256Base64Url(codeVerifier);
-  setPkcePayload({ codeVerifier, state, nonce, createdAt: Date.now(), redirectUri: appRedirectUri });
-
-  const authorize = new URL(`${AUTHORITY}/authorize`);
-  authorize.search = new URLSearchParams({
-    client_id: AZURE_CLIENT_ID,
-    response_type: "code",
-    redirect_uri: appRedirectUri,
-    response_mode: "fragment",
-    scope: AUTH_SCOPES,
-    state,
-    nonce,
-    code_challenge: codeChallenge,
-    code_challenge_method: "S256",
-    prompt: "select_account",
-  }).toString();
-  window.location.assign(authorize.toString());
+}
+async function completeSignedInSession(account) {
+  if (!account) throw Object.assign(new Error("No Microsoft account was returned."), { errorCode: "no_account" });
+  pca.setActiveAccount(account);
+  let profile = profileFromAccount(account);
+  try {
+    const token = await acquireToken(account);
+    if (token?.accessToken) profile = await graphMe(token.accessToken);
+  } catch (profileError) {
+    console.warn("Microsoft Graph profile lookup failed; using account claims instead.", profileError);
+  }
+  currentProfile = profile;
+  fillAllZohoFields(profile);
+  setSignedInUI({ signedIn: true, name: profile.displayName || profile.userPrincipalName || account.username || "RSSB User" });
+  clearAuthError();
+  showGate(false);
+  showWorkspace({ updateHistory: true, scroll: false });
 }
 async function hydrateUser() {
-  let profile = null;
-  const params = parseAuthParams();
+  await ensureMsalReady();
 
   try {
-    if (params.has("code") || params.has("error")) {
-      profile = await processMicrosoftReturn();
-    } else {
-      profile = getStoredProfile();
+    const redirectResp = await pca.handleRedirectPromise();
+    if (redirectResp?.account) {
+      await completeSignedInSession(redirectResp.account);
+      return;
     }
-  } catch (e) {
-    console.error("Microsoft sign-in completion failed:", e);
-    clearStoredSession();
-    showAuthError("Microsoft sign-in returned, but the portal could not complete the session. Please try again or contact supportdesk@rssb.rw.", e?.errorCode || e?.error || "auth_failed");
-    try { history.replaceState({}, document.title, appRedirectUri); } catch {}
-    profile = null;
+  } catch (redirectError) {
+    console.warn("MSAL redirect response ignored. Using popup/session flow.", redirectError);
+    if (window.location.hash.includes("code=") || window.location.hash.includes("error=")) {
+      history.replaceState({ view: "gate" }, document.title, appRedirectUri);
+    }
   }
 
-  if (!profile) {
+  const account = pca.getActiveAccount() || pca.getAllAccounts()[0];
+  if (!account) {
     setSignedInUI({ signedIn: false });
     showGate(true);
     hideAllViews();
     return;
   }
-
-  currentProfile = profile;
-  fillAllZohoFields(profile);
-  setSignedInUI({ signedIn: true, name: profile.displayName || profile.userPrincipalName || "RSSB User" });
-  clearAuthError();
-  showGate(false);
-  showWorkspace({ updateHistory: true, scroll: false });
+  await completeSignedInSession(account);
 }
 async function signIn() {
   try {
     clearAuthError();
-    await startMicrosoftSignIn();
+    await ensureMsalReady();
+    const resp = await pca.loginPopup({ ...loginRequest, prompt: "select_account" });
+    await completeSignedInSession(resp.account);
   } catch (e) {
-    console.error("Microsoft sign-in failed:", e);
-    showAuthError("Please try again. If sign-in still fails, contact supportdesk@rssb.rw.", e?.errorCode || e?.error || "auth_start_failed");
+    console.error("Login failed:", e);
+    const code = e?.errorCode || e?.error || e?.name || "login_failed";
+    let message = "Please try again. If nothing opens, allow pop-ups for this site or contact supportdesk@rssb.rw.";
+    if (String(code).includes("popup") || String(code).includes("user_cancelled")) {
+      message = "Sign-in was cancelled or blocked. Please allow pop-ups for this site and try again.";
+    }
+    showAuthError(message, code);
   }
 }
 async function signOut() {
-  currentProfile = null;
-  clearStoredSession();
-  setSignedInUI({ signedIn: false });
-  hideAllViews();
-  showGate(true);
-  try { history.replaceState({}, document.title, appRedirectUri); } catch {}
+  try {
+    await ensureMsalReady();
+    const account = pca.getActiveAccount() || pca.getAllAccounts()[0];
+    if (account) await pca.logoutPopup({ account, postLogoutRedirectUri: appRedirectUri });
+  } catch (e) {
+    console.warn("Sign out failed:", e);
+  } finally {
+    currentProfile = null;
+    setSignedInUI({ signedIn: false });
+    hideAllViews();
+    showGate(true);
+    try { history.replaceState({ view: "gate" }, document.title, appRedirectUri); } catch {}
+  }
 }
 
 function wireItSubjectPrefill() {
