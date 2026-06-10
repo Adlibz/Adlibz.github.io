@@ -4,7 +4,7 @@ const msalConfig = {
   auth: {
     clientId: "5e79f919-ca8a-4884-badf-4b88180831b3",
     authority: "https://login.microsoftonline.com/d4034026-d802-4056-b343-5d4d4731884b",
-    redirectUri: "https://support.rssb.rw/",
+    redirectUri: window.location.origin + "/",
   },
   cache: {
     cacheLocation: "localStorage",
