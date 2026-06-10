@@ -1,15 +1,14 @@
-/* RSSB Support Portal - Microsoft Entra ID Sign-in + Support Hub */
-console.info("RSSB Support Portal auth build: WORKING-msal-popup-original-auth-20260610-v8");
-
-// IMPORTANT: This restores the exact authentication pattern from the version that worked.
-// Do not replace this with custom PKCE or auth-blank callback unless there is a backend reason.
-const appRedirectUri = `${window.location.origin}/`;
+/* RSSB Support Portal - STABLE MSAL POPUP LOGIN + Final UI */
+console.info("RSSB Support Portal auth build: STABLE-msal-popup-working-auth-final-ui-20260610-v9");
 
 const msalConfig = {
   auth: {
     clientId: "5e79f919-ca8a-4884-badf-4b88180831b3",
     authority: "https://login.microsoftonline.com/d4034026-d802-4056-b343-5d4d4731884b",
-    redirectUri: appRedirectUri,
+    // Same behavior as the version where Microsoft sign-in worked smoothly.
+    // On GitHub test it becomes: https://adlibz.github.io/
+    // On production it becomes: https://support.rssb.rw/
+    redirectUri: window.location.origin + window.location.pathname,
   },
   cache: {
     cacheLocation: "localStorage",
@@ -136,39 +135,27 @@ async function graphMe(accessToken) {
   if (!res.ok) throw new Error("Unable to read profile from Microsoft Graph.");
   return res.json();
 }
-function profileFromAccount(account) {
-  const claims = account?.idTokenClaims || {};
-  const displayName = claims.name || account?.name || account?.username || "RSSB User";
-  const parts = String(displayName).trim().split(/\s+/);
-  return {
-    displayName,
-    givenName: claims.given_name || parts[0] || "",
-    surname: claims.family_name || parts.slice(1).join(" ") || "",
-    mail: claims.email || claims.preferred_username || account?.username || "",
-    userPrincipalName: claims.preferred_username || account?.username || claims.upn || "",
-  };
-}
-async function ensureMsalReady() {
-  if (!pca) {
-    throw Object.assign(new Error("Microsoft sign-in library did not load. Please refresh the page or contact supportdesk@rssb.rw."), { errorCode: "msal_not_loaded" });
-  }
-  await pca.initialize();
-}
 async function acquireToken(account) {
   try {
     return await pca.acquireTokenSilent({ ...loginRequest, account });
   } catch (e) {
-    return await pca.acquireTokenPopup(loginRequest);
+    // Keep the same working pattern from the older stable build: popup fallback only.
+    return await pca.acquireTokenPopup({ ...loginRequest, account });
   }
 }
+
 async function hydrateUser() {
   await pca.initialize();
+
+  // Kept from the old working version. It safely ignores empty/missing redirect responses.
   const redirectResp = await pca.handleRedirectPromise().catch(() => null);
-  if (redirectResp?.account) pca.setActiveAccount(redirectResp.account);
-  else {
+  if (redirectResp?.account) {
+    pca.setActiveAccount(redirectResp.account);
+  } else {
     const accounts = pca.getAllAccounts();
     if (accounts.length) pca.setActiveAccount(accounts[0]);
   }
+
   const account = pca.getActiveAccount();
   if (!account) {
     setSignedInUI({ signedIn: false });
@@ -176,22 +163,45 @@ async function hydrateUser() {
     hideAllViews();
     return;
   }
+
   const token = await acquireToken(account);
-  const me = await graphMe(token.accessToken);
+  const me = await graphMe(token.accessToken).catch(() => ({
+    displayName: account.name || account.username,
+    givenName: account.idTokenClaims?.given_name || (account.name || "").split(" ")[0] || "",
+    surname: account.idTokenClaims?.family_name || (account.name || "").split(" ").slice(1).join(" ") || "",
+    mail: account.username,
+    userPrincipalName: account.username,
+  }));
+
   currentProfile = me;
   fillAllZohoFields(me);
   setSignedInUI({ signedIn: true, name: me.displayName || account.username });
   showGate(false);
-  showWorkspace({ updateHistory: true, scroll: false });
+  showWorkspace({ updateHistory: false, scroll: false });
 }
+
 async function signIn() {
   try {
     clearAuthError();
     await pca.initialize();
+    console.info("Starting Microsoft sign-in with stable MSAL popup flow...");
+
+    // This is the normal working flow from the previous stable project.
     const resp = await pca.loginPopup(loginRequest);
+    if (!resp || !resp.account) {
+      throw { errorCode: "empty_popup_response", message: "Microsoft returned an empty sign-in response." };
+    }
+
     pca.setActiveAccount(resp.account);
     const token = await acquireToken(resp.account);
-    const me = await graphMe(token.accessToken);
+    const me = await graphMe(token.accessToken).catch(() => ({
+      displayName: resp.account.name || resp.account.username,
+      givenName: resp.account.idTokenClaims?.given_name || (resp.account.name || "").split(" ")[0] || "",
+      surname: resp.account.idTokenClaims?.family_name || (resp.account.name || "").split(" ").slice(1).join(" ") || "",
+      mail: resp.account.username,
+      userPrincipalName: resp.account.username,
+    }));
+
     currentProfile = me;
     fillAllZohoFields(me);
     setSignedInUI({ signedIn: true, name: me.displayName || resp.account.username });
@@ -202,6 +212,7 @@ async function signIn() {
     showAuthError("Please try again. If nothing opens, allow pop-ups for this site or contact supportdesk@rssb.rw.", (e && (e.errorCode || e.error)));
   }
 }
+
 async function signOut() {
   try {
     await pca.initialize();
@@ -418,12 +429,6 @@ window.addEventListener("pageshow", () => {
 });
 
 document.addEventListener("DOMContentLoaded", () => {
-  if (isMsalPopupCallback) {
-    // Critical: keep the callback page quiet so the parent loginPopup can read the response.
-    document.body.innerHTML = '<div style="font-family:system-ui,sans-serif;padding:24px;color:#1f2a5c">Completing Microsoft sign-in...</div>';
-    return;
-  }
-
   const currentYear = new Date().getFullYear();
   const y = $("year");
   const ay = $("authYear");
