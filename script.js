@@ -4,7 +4,7 @@ const msalConfig = {
   auth: {
     clientId: "5e79f919-ca8a-4884-badf-4b88180831b3",
     authority: "https://login.microsoftonline.com/d4034026-d802-4056-b343-5d4d4731884b",
-    redirectUri: window.location.origin + window.location.pathname,
+    redirectUri: "https://support.rssb.rw/",
   },
   cache: {
     cacheLocation: "localStorage",
@@ -23,8 +23,13 @@ function $(id) { return document.getElementById(id); }
 function showAuthError(message, code) {
   const box = $("authError");
   if (!box) return;
-  const extra = code ? ` <span style="opacity:.8">(${code})</span>` : "";
-  box.innerHTML = `<strong>Sign-in failed</strong>${message}${extra}`;
+  box.textContent = "";
+  const title = document.createElement("strong");
+  title.textContent = "Sign-in failed";
+  const body = document.createElement("span");
+  const safeMessage = message || "Please try again. If nothing opens, allow pop-ups for this site.";
+  body.textContent = code ? `${safeMessage} (${String(code)})` : safeMessage;
+  box.append(title, body);
   box.hidden = false;
 }
 function clearAuthError() {
@@ -81,7 +86,7 @@ function setSignedInUI({ signedIn, name }) {
   if (workspaceUser) workspaceUser.textContent = signedIn ? (name || "RSSB User") : "RSSB User";
   if (headerBadge) headerBadge.textContent = signedIn ? (name || "Enterprise Solutions") : "Enterprise Solutions";
   if (itHeaderBadge) itHeaderBadge.textContent = "IT Support";
-  if (cxHeaderBadge) cxHeaderBadge.textContent = "Customer Experience";
+  if (cxHeaderBadge) cxHeaderBadge.textContent = "Schemes & Member Support";
 }
 
 function getForm(formId) { return document.forms[formId] || document.getElementById(formId); }
@@ -379,8 +384,11 @@ window.addEventListener("pageshow", () => {
 });
 
 document.addEventListener("DOMContentLoaded", () => {
+  const currentYear = new Date().getFullYear();
   const y = $("year");
-  if (y) y.textContent = new Date().getFullYear();
+  const ay = $("authYear");
+  if (y) y.textContent = currentYear;
+  if (ay) ay.textContent = currentYear;
   wireItSubjectPrefill();
   wireCxDependencies();
 
