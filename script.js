@@ -1,13 +1,10 @@
-/* RSSB Support Portal - STABLE MSAL POPUP LOGIN + Final UI */
-console.info("RSSB Support Portal auth build: STABLE-msal-popup-working-auth-final-ui-20260610-v9");
+console.info("RSSB Support Portal auth build: KNOWN-WORKING-msal-popup-auth-ui-safe-20260610-v10");
+/* RSSB Support Portal - Microsoft Entra ID Sign-in + Support Hub */
 
 const msalConfig = {
   auth: {
     clientId: "5e79f919-ca8a-4884-badf-4b88180831b3",
     authority: "https://login.microsoftonline.com/d4034026-d802-4056-b343-5d4d4731884b",
-    // Same behavior as the version where Microsoft sign-in worked smoothly.
-    // On GitHub test it becomes: https://adlibz.github.io/
-    // On production it becomes: https://support.rssb.rw/
     redirectUri: window.location.origin + window.location.pathname,
   },
   cache: {
@@ -27,13 +24,8 @@ function $(id) { return document.getElementById(id); }
 function showAuthError(message, code) {
   const box = $("authError");
   if (!box) return;
-  box.textContent = "";
-  const title = document.createElement("strong");
-  title.textContent = "Sign-in failed";
-  const body = document.createElement("span");
-  const safeMessage = message || "Please try again. If sign-in still fails, contact supportdesk@rssb.rw.";
-  body.textContent = code ? `${safeMessage} (${String(code)})` : safeMessage;
-  box.append(title, body);
+  const extra = code ? ` <span style="opacity:.8">(${code})</span>` : "";
+  box.innerHTML = `<strong>Sign-in failed</strong>${message}${extra}`;
   box.hidden = false;
 }
 function clearAuthError() {
@@ -55,31 +47,20 @@ function hideAllViews() {
     setElementHidden($(id), true);
   });
 }
-function showWorkspace(options = {}) {
-  const { updateHistory = true, scroll = true } = options;
+function showWorkspace() {
   hideAllViews();
   setElementHidden($("workspaceHub"), false);
-  if (updateHistory) history.replaceState({ view: "hub" }, "", window.location.pathname);
-  if (scroll) window.scrollTo({ top: 0, behavior: "smooth" });
+  history.replaceState(null, "", window.location.pathname);
+  window.scrollTo({ top: 0, behavior: "smooth" });
 }
-function showSupportView(type, options = {}) {
-  const { updateHistory = true, scroll = true } = options;
+function showSupportView(type) {
   hideAllViews();
-  const normalizedType = type === "cx" ? "cx" : "it";
-  const target = normalizedType === "cx" ? $("cxSupportView") : $("itSupportView");
+  const target = type === "cx" ? $("cxSupportView") : $("itSupportView");
   setElementHidden(target, false);
   fillAllZohoFields(currentProfile);
-  if (normalizedType === "cx") initializeCxDependencies();
-  if (updateHistory) history.pushState({ view: normalizedType }, "", `#${normalizedType}`);
-  if (scroll) window.scrollTo({ top: 0, behavior: "smooth" });
-}
-function goBackToWorkspace() {
-  const view = history.state && history.state.view;
-  if (view === "it" || view === "cx") {
-    history.back();
-  } else {
-    showWorkspace();
-  }
+  if (type === "cx") initializeCxDependencies();
+  history.replaceState(null, "", `#${type}`);
+  window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
 function setSignedInUI({ signedIn, name }) {
@@ -101,7 +82,7 @@ function setSignedInUI({ signedIn, name }) {
   if (workspaceUser) workspaceUser.textContent = signedIn ? (name || "RSSB User") : "RSSB User";
   if (headerBadge) headerBadge.textContent = signedIn ? (name || "Enterprise Solutions") : "Enterprise Solutions";
   if (itHeaderBadge) itHeaderBadge.textContent = "IT Support";
-  if (cxHeaderBadge) cxHeaderBadge.textContent = "Schemes & Member Support";
+  if (cxHeaderBadge) cxHeaderBadge.textContent = "Customer Experience";
 }
 
 function getForm(formId) { return document.forms[formId] || document.getElementById(formId); }
@@ -139,23 +120,17 @@ async function acquireToken(account) {
   try {
     return await pca.acquireTokenSilent({ ...loginRequest, account });
   } catch (e) {
-    // Keep the same working pattern from the older stable build: popup fallback only.
-    return await pca.acquireTokenPopup({ ...loginRequest, account });
+    return await pca.acquireTokenPopup(loginRequest);
   }
 }
-
 async function hydrateUser() {
   await pca.initialize();
-
-  // Kept from the old working version. It safely ignores empty/missing redirect responses.
   const redirectResp = await pca.handleRedirectPromise().catch(() => null);
-  if (redirectResp?.account) {
-    pca.setActiveAccount(redirectResp.account);
-  } else {
+  if (redirectResp?.account) pca.setActiveAccount(redirectResp.account);
+  else {
     const accounts = pca.getAllAccounts();
     if (accounts.length) pca.setActiveAccount(accounts[0]);
   }
-
   const account = pca.getActiveAccount();
   if (!account) {
     setSignedInUI({ signedIn: false });
@@ -163,56 +138,32 @@ async function hydrateUser() {
     hideAllViews();
     return;
   }
-
   const token = await acquireToken(account);
-  const me = await graphMe(token.accessToken).catch(() => ({
-    displayName: account.name || account.username,
-    givenName: account.idTokenClaims?.given_name || (account.name || "").split(" ")[0] || "",
-    surname: account.idTokenClaims?.family_name || (account.name || "").split(" ").slice(1).join(" ") || "",
-    mail: account.username,
-    userPrincipalName: account.username,
-  }));
-
+  const me = await graphMe(token.accessToken);
   currentProfile = me;
   fillAllZohoFields(me);
   setSignedInUI({ signedIn: true, name: me.displayName || account.username });
   showGate(false);
-  showWorkspace({ updateHistory: false, scroll: false });
+  showWorkspace();
 }
-
 async function signIn() {
   try {
     clearAuthError();
     await pca.initialize();
-    console.info("Starting Microsoft sign-in with stable MSAL popup flow...");
-
-    // This is the normal working flow from the previous stable project.
     const resp = await pca.loginPopup(loginRequest);
-    if (!resp || !resp.account) {
-      throw { errorCode: "empty_popup_response", message: "Microsoft returned an empty sign-in response." };
-    }
-
     pca.setActiveAccount(resp.account);
     const token = await acquireToken(resp.account);
-    const me = await graphMe(token.accessToken).catch(() => ({
-      displayName: resp.account.name || resp.account.username,
-      givenName: resp.account.idTokenClaims?.given_name || (resp.account.name || "").split(" ")[0] || "",
-      surname: resp.account.idTokenClaims?.family_name || (resp.account.name || "").split(" ").slice(1).join(" ") || "",
-      mail: resp.account.username,
-      userPrincipalName: resp.account.username,
-    }));
-
+    const me = await graphMe(token.accessToken);
     currentProfile = me;
     fillAllZohoFields(me);
     setSignedInUI({ signedIn: true, name: me.displayName || resp.account.username });
     showGate(false);
-    showWorkspace({ updateHistory: true, scroll: false });
+    showWorkspace();
   } catch (e) {
     console.error("Login failed:", e);
     showAuthError("Please try again. If nothing opens, allow pop-ups for this site or contact supportdesk@rssb.rw.", (e && (e.errorCode || e.error)));
   }
 }
-
 async function signOut() {
   try {
     await pca.initialize();
@@ -429,11 +380,8 @@ window.addEventListener("pageshow", () => {
 });
 
 document.addEventListener("DOMContentLoaded", () => {
-  const currentYear = new Date().getFullYear();
   const y = $("year");
-  const ay = $("authYear");
-  if (y) y.textContent = currentYear;
-  if (ay) ay.textContent = currentYear;
+  if (y) y.textContent = new Date().getFullYear();
   wireItSubjectPrefill();
   wireCxDependencies();
 
@@ -442,18 +390,8 @@ document.addEventListener("DOMContentLoaded", () => {
   $("btnSignOut")?.addEventListener("click", signOut);
   $("btnChooseIT")?.addEventListener("click", () => showSupportView("it"));
   $("btnChooseCX")?.addEventListener("click", () => showSupportView("cx"));
-  $("btnBackFromIT")?.addEventListener("click", goBackToWorkspace);
-  $("btnBackFromCX")?.addEventListener("click", goBackToWorkspace);
-
-  window.addEventListener("popstate", () => {
-    if (!currentProfile) return;
-    const hash = window.location.hash.replace("#", "");
-    if (hash === "it" || hash === "cx") {
-      showSupportView(hash, { updateHistory: false, scroll: true });
-    } else {
-      showWorkspace({ updateHistory: false, scroll: true });
-    }
-  });
+  $("btnBackFromIT")?.addEventListener("click", showWorkspace);
+  $("btnBackFromCX")?.addEventListener("click", showWorkspace);
 
   hydrateUser().catch(e => {
     console.error("Auth hydration failed:", e);
