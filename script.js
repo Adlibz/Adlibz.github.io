@@ -51,20 +51,31 @@ function hideAllViews() {
     setElementHidden($(id), true);
   });
 }
-function showWorkspace() {
+function showWorkspace(options = {}) {
+  const { updateHistory = true, scroll = true } = options;
   hideAllViews();
   setElementHidden($("workspaceHub"), false);
-  history.replaceState(null, "", window.location.pathname);
-  window.scrollTo({ top: 0, behavior: "smooth" });
+  if (updateHistory) history.replaceState({ view: "hub" }, "", window.location.pathname);
+  if (scroll) window.scrollTo({ top: 0, behavior: "smooth" });
 }
-function showSupportView(type) {
+function showSupportView(type, options = {}) {
+  const { updateHistory = true, scroll = true } = options;
   hideAllViews();
-  const target = type === "cx" ? $("cxSupportView") : $("itSupportView");
+  const normalizedType = type === "cx" ? "cx" : "it";
+  const target = normalizedType === "cx" ? $("cxSupportView") : $("itSupportView");
   setElementHidden(target, false);
   fillAllZohoFields(currentProfile);
-  if (type === "cx") initializeCxDependencies();
-  history.replaceState(null, "", `#${type}`);
-  window.scrollTo({ top: 0, behavior: "smooth" });
+  if (normalizedType === "cx") initializeCxDependencies();
+  if (updateHistory) history.pushState({ view: normalizedType }, "", `#${normalizedType}`);
+  if (scroll) window.scrollTo({ top: 0, behavior: "smooth" });
+}
+function goBackToWorkspace() {
+  const view = history.state && history.state.view;
+  if (view === "it" || view === "cx") {
+    history.back();
+  } else {
+    showWorkspace();
+  }
 }
 
 function setSignedInUI({ signedIn, name }) {
@@ -397,8 +408,18 @@ document.addEventListener("DOMContentLoaded", () => {
   $("btnSignOut")?.addEventListener("click", signOut);
   $("btnChooseIT")?.addEventListener("click", () => showSupportView("it"));
   $("btnChooseCX")?.addEventListener("click", () => showSupportView("cx"));
-  $("btnBackFromIT")?.addEventListener("click", showWorkspace);
-  $("btnBackFromCX")?.addEventListener("click", showWorkspace);
+  $("btnBackFromIT")?.addEventListener("click", goBackToWorkspace);
+  $("btnBackFromCX")?.addEventListener("click", goBackToWorkspace);
+
+  window.addEventListener("popstate", () => {
+    if (!currentProfile) return;
+    const hash = window.location.hash.replace("#", "");
+    if (hash === "it" || hash === "cx") {
+      showSupportView(hash, { updateHistory: false, scroll: true });
+    } else {
+      showWorkspace({ updateHistory: false, scroll: true });
+    }
+  });
 
   hydrateUser().catch(e => {
     console.error("Auth hydration failed:", e);
