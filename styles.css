@@ -977,7 +977,7 @@ body:has(#authGate:not([hidden])) .footer{
 .authGate__bg{
   background:
     linear-gradient(90deg, rgba(3,12,31,.96) 0%, rgba(5,21,48,.88) 48%, rgba(3,12,31,.78) 100%),
-    url("./resource/images/building-bg.png") center/cover no-repeat,
+    url("./resource/images/building-bg.jpg") center/cover no-repeat,
     radial-gradient(900px 500px at 20% 20%, rgba(37,99,235,.24), transparent 65%),
     radial-gradient(720px 440px at 80% 25%, rgba(212,175,55,.16), transparent 60%);
   backdrop-filter:none;
@@ -1362,7 +1362,7 @@ body:has(#authGate:not([hidden])) .footer{
   inset:0;
   background:
     linear-gradient(90deg, rgba(3,12,31,.98) 0%, rgba(6,20,48,.91) 46%, rgba(3,12,31,.80) 100%),
-    url("./resource/images/building-bg.png") center right / cover no-repeat,
+    url("./resource/images/building-bg.jpg") center right / cover no-repeat,
     radial-gradient(900px 520px at 18% 20%, rgba(37,99,235,.24), transparent 65%),
     radial-gradient(720px 440px at 78% 28%, rgba(212,175,55,.16), transparent 60%) !important;
   filter:none !important;
