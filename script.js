@@ -1,3 +1,4 @@
+console.info("RSSB Support Portal auth build: RESTORED-WORKING-msal-popup-auth-latest-ui-20260611-v12");
 /* RSSB Support Portal - Microsoft Entra ID Sign-in + Support Hub */
 
 const msalConfig = {
