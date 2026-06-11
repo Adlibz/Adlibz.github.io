@@ -1,13 +1,10 @@
-console.info("RSSB Support Portal auth build: MSAL-REDIRECT-stable-ui-20260610-v11");
 /* RSSB Support Portal - Microsoft Entra ID Sign-in + Support Hub */
 
 const msalConfig = {
   auth: {
     clientId: "5e79f919-ca8a-4884-badf-4b88180831b3",
     authority: "https://login.microsoftonline.com/d4034026-d802-4056-b343-5d4d4731884b",
-    redirectUri: window.location.origin + "/",
-    postLogoutRedirectUri: window.location.origin + "/",
-    navigateToLoginRequestUrl: false,
+    redirectUri: window.location.origin + window.location.pathname,
   },
   cache: {
     cacheLocation: "localStorage",
@@ -122,34 +119,17 @@ async function acquireToken(account) {
   try {
     return await pca.acquireTokenSilent({ ...loginRequest, account });
   } catch (e) {
-    console.warn("Silent token acquisition failed. Redirecting to Microsoft to refresh the session.", e);
-    await pca.acquireTokenRedirect({ ...loginRequest, account });
-    return null;
+    return await pca.acquireTokenPopup(loginRequest);
   }
 }
 async function hydrateUser() {
   await pca.initialize();
-
-  let redirectResp = null;
-  try {
-    redirectResp = await pca.handleRedirectPromise();
-  } catch (e) {
-    console.error("Microsoft redirect handling failed:", e);
-    const code = e && (e.errorCode || e.error);
-    setSignedInUI({ signedIn: false });
-    showGate(true);
-    hideAllViews();
-    showAuthError("Microsoft sign-in returned but could not be completed. Open the clean portal link and try again. If it continues, contact supportdesk@rssb.rw.", code);
-    return;
-  }
-
-  if (redirectResp && redirectResp.account) {
-    pca.setActiveAccount(redirectResp.account);
-  } else {
+  const redirectResp = await pca.handleRedirectPromise().catch(() => null);
+  if (redirectResp?.account) pca.setActiveAccount(redirectResp.account);
+  else {
     const accounts = pca.getAllAccounts();
     if (accounts.length) pca.setActiveAccount(accounts[0]);
   }
-
   const account = pca.getActiveAccount();
   if (!account) {
     setSignedInUI({ signedIn: false });
@@ -157,61 +137,40 @@ async function hydrateUser() {
     hideAllViews();
     return;
   }
-
-  const token = redirectResp && redirectResp.accessToken
-    ? redirectResp
-    : await acquireToken(account);
-
-  if (!token || !token.accessToken) return;
-
-  try {
-    const me = await graphMe(token.accessToken);
-    currentProfile = me;
-    fillAllZohoFields(me);
-    setSignedInUI({ signedIn: true, name: me.displayName || account.username });
-    clearAuthError();
-    showGate(false);
-    showWorkspace();
-  } catch (e) {
-    console.error("Microsoft profile lookup failed:", e);
-    const fallbackName = account.name || account.username || "Signed in";
-    currentProfile = {
-      displayName: fallbackName,
-      givenName: account.name ? account.name.split(" ")[0] : "",
-      surname: account.name ? account.name.split(" ").slice(1).join(" ") : "",
-      mail: account.username,
-      userPrincipalName: account.username
-    };
-    fillAllZohoFields(currentProfile);
-    setSignedInUI({ signedIn: true, name: fallbackName });
-    clearAuthError();
-    showGate(false);
-    showWorkspace();
-  }
+  const token = await acquireToken(account);
+  const me = await graphMe(token.accessToken);
+  currentProfile = me;
+  fillAllZohoFields(me);
+  setSignedInUI({ signedIn: true, name: me.displayName || account.username });
+  showGate(false);
+  showWorkspace();
 }
 async function signIn() {
   try {
     clearAuthError();
     await pca.initialize();
-    console.info("Starting Microsoft sign-in with MSAL redirect flow...");
-    await pca.loginRedirect(loginRequest);
+    const resp = await pca.loginPopup(loginRequest);
+    pca.setActiveAccount(resp.account);
+    const token = await acquireToken(resp.account);
+    const me = await graphMe(token.accessToken);
+    currentProfile = me;
+    fillAllZohoFields(me);
+    setSignedInUI({ signedIn: true, name: me.displayName || resp.account.username });
+    showGate(false);
+    showWorkspace();
   } catch (e) {
-    console.error("Microsoft sign-in redirect failed:", e);
-    const code = e && (e.errorCode || e.error);
-    showAuthError("Please try again. If sign-in still fails, contact supportdesk@rssb.rw.", code);
+    console.error("Login failed:", e);
+    showAuthError("Please try again. If nothing opens, allow pop-ups for this site.", (e && (e.errorCode || e.error)));
   }
 }
 async function signOut() {
   try {
     await pca.initialize();
     const account = pca.getActiveAccount();
-    currentProfile = null;
-    setSignedInUI({ signedIn: false });
-    hideAllViews();
-    showGate(true);
-    await pca.logoutRedirect({ account, postLogoutRedirectUri: window.location.origin + "/" });
+    await pca.logoutPopup({ account });
   } catch (e) {
     console.warn("Sign out failed:", e);
+  } finally {
     currentProfile = null;
     setSignedInUI({ signedIn: false });
     hideAllViews();
