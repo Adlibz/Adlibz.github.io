@@ -1,4 +1,4 @@
-console.info("RSSB Support Portal auth build: CLEAN-WORKING-msal-popup-safe-routing-latest-ui-20260613-v13");
+console.info("RSSB Support Portal auth build: LATEST-UI-STABLE-POPUP-AUTH-FALLBACK-ROUTING-20260614-v14");
 /* RSSB Support Portal - Microsoft Entra ID Sign-in + Support Hub */
 
 const msalConfig = {
@@ -196,14 +196,43 @@ function clearLegacyRedirectHashIfPresent() {
     history.replaceState(null, "", window.location.pathname);
   }
 }
-async function loadProfileFromAccount(account) {
-  const token = await acquireTokenSilentOnly(account);
-  const me = await graphMe(token.accessToken);
-  currentProfile = me;
-  fillAllZohoFields(me);
-  setSignedInUI({ signedIn: true, name: me.displayName || account.username });
+function clearProtectedRouteHashWhenSignedOut() {
+  const hash = (window.location.hash || "").toLowerCase();
+  if (hash === "#hub" || hash === "#it" || hash === "#cx") {
+    history.replaceState(null, "", window.location.pathname);
+  }
+}
+function profileFromAccount(account) {
+  const username = account?.username || "";
+  const rawName = account?.name || username.split("@")[0] || "RSSB User";
+  const nameParts = rawName.trim().split(/\s+/).filter(Boolean);
+  return {
+    displayName: rawName,
+    givenName: nameParts[0] || "",
+    surname: nameParts.slice(1).join(" "),
+    mail: username.includes("@") ? username : "",
+    userPrincipalName: username,
+  };
+}
+function activateSignedInAccount(account, profile) {
+  const safeProfile = profile || profileFromAccount(account);
+  currentProfile = safeProfile;
+  fillAllZohoFields(safeProfile);
+  setSignedInUI({ signedIn: true, name: safeProfile.displayName || account?.username || "Signed in" });
   showGate(false);
-  return me;
+  return safeProfile;
+}
+async function loadProfileFromAccount(account) {
+  try {
+    const token = await acquireTokenSilentOnly(account);
+    const me = await graphMe(token.accessToken);
+    return activateSignedInAccount(account, me);
+  } catch (e) {
+    // Do not keep the user stuck on the sign-in screen just because Graph/profile loading failed.
+    // Microsoft sign-in already succeeded if we have an MSAL account. Use the account as fallback.
+    console.warn("Profile could not be loaded from Graph; continuing with Microsoft account fallback:", e);
+    return activateSignedInAccount(account, profileFromAccount(account));
+  }
 }
 async function hydrateUser() {
   await ensureMsalReady();
@@ -225,19 +254,13 @@ async function hydrateUser() {
     setSignedInUI({ signedIn: false });
     showGate(true);
     hideAllViews();
+    clearProtectedRouteHashWhenSignedOut();
     return;
   }
 
-  try {
-    await loadProfileFromAccount(account);
-    renderCurrentRoute();
-    if (!window.location.hash) showWorkspace({ historyMode: "replace", scroll: false });
-  } catch (e) {
-    console.warn("Existing session found, but profile could not be loaded silently:", e);
-    setSignedInUI({ signedIn: false });
-    showGate(true);
-    hideAllViews();
-  }
+  await loadProfileFromAccount(account);
+  renderCurrentRoute();
+  if (!window.location.hash) showWorkspace({ historyMode: "replace", scroll: false });
 }
 async function signIn(options = {}) {
   if (signInRunning) return;
@@ -252,31 +275,29 @@ async function signIn(options = {}) {
     const existingAccount = pca.getActiveAccount() || pca.getAllAccounts()[0];
     if (existingAccount) {
       pca.setActiveAccount(existingAccount);
-      try {
-        await loadProfileFromAccount(existingAccount);
-        showWorkspace({ historyMode: "replace" });
-        return;
-      } catch (silentError) {
-        console.warn("Silent profile load failed, opening Microsoft sign-in:", silentError);
-      }
+      await loadProfileFromAccount(existingAccount);
+      showWorkspace({ historyMode: "replace" });
+      return;
     }
 
     const resp = await pca.loginPopup(loginRequest);
     if (!resp?.account) throw new Error("Microsoft did not return an account after sign-in.");
     pca.setActiveAccount(resp.account);
 
-    let me;
     if (resp.accessToken) {
-      me = await graphMe(resp.accessToken);
-      currentProfile = me;
-      fillAllZohoFields(me);
-      setSignedInUI({ signedIn: true, name: me.displayName || resp.account.username });
-      showGate(false);
+      try {
+        const me = await graphMe(resp.accessToken);
+        activateSignedInAccount(resp.account, me);
+      } catch (graphError) {
+        console.warn("Graph profile read failed after sign-in; opening hub with account fallback:", graphError);
+        activateSignedInAccount(resp.account, profileFromAccount(resp.account));
+      }
     } else {
-      me = await loadProfileFromAccount(resp.account);
+      await loadProfileFromAccount(resp.account);
     }
 
     showWorkspace({ historyMode: "replace" });
+    console.info("Microsoft sign-in completed; support hub is visible.");
   } catch (e) {
     const code = getErrorCode(e);
     console.error("Login failed:", e);
@@ -285,7 +306,7 @@ async function signIn(options = {}) {
       cleanupStaleMsalInteractionArtifacts();
       signInRunning = false;
       setSignInBusy(false);
-      await new Promise(resolve => setTimeout(resolve, 250));
+      await new Promise(resolve => setTimeout(resolve, 300));
       return signIn({ retry: true });
     }
 
