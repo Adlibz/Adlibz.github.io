@@ -17,7 +17,7 @@
   <script src="https://static.zohocdn.com/zohodeskstatic/app/js/jqueryandencoder.ef05974972bf3bca1b87.js"></script>
   <!-- Microsoft Entra ID (Azure AD) authentication for static sites (MSAL Browser) -->
   <script src="https://cdn.jsdelivr.net/npm/@azure/msal-browser@3.25.0/lib/msal-browser.min.js"></script>
-  <script defer src="./script.js"></script>
+  <script defer src="./script.js?v=clean-working-msal-popup-safe-routing-v13"></script>
 </head>
 <body>
   <div class="page">
@@ -33,8 +33,8 @@
       <div class="topbar__right">
         <div class="authMini" aria-label="Authentication">
           <button id="btnSignIn" class="btn btn--primary" type="button">Sign in</button>
-          <button id="btnSignOut" class="btn btn--ghost" type="button" style="display:none;">Sign out</button>
-          <span id="authPill" class="pill" style="display:none;" title="Signed in">
+          <button id="btnSignOut" class="btn btn--ghost" type="button" hidden>Sign out</button>
+          <span id="authPill" class="pill" hidden title="Signed in">
             <span class="pill__dot" aria-hidden="true"></span>
             <span id="authName">Signed in</span>
           </span>
@@ -257,7 +257,7 @@
       <section class="panel panel--form">
         <div class="panel__inner">
           <div class="formHeader">
-            <div><div class="formHeader__title">New Schemes support Request</div><div class="formHeader__subtitle">Choose the product, service category, and issue sub category.</div></div>
+            <div><div class="formHeader__title">New CX Support Request</div><div class="formHeader__subtitle">Choose the product, service category, and issue sub category.</div></div>
             <div id="cxHeaderBadge" class="formHeader__badge">Schemes &amp; Member Support</div>
           </div>
           <div id="cxFormError" class="formError" role="alert" hidden></div>

@@ -1,4 +1,4 @@
-console.info("RSSB Support Portal auth build: RESTORED-WORKING-msal-popup-auth-latest-ui-20260611-v12");
+console.info("RSSB Support Portal auth build: CLEAN-WORKING-msal-popup-safe-routing-latest-ui-20260613-v13");
 /* RSSB Support Portal - Microsoft Entra ID Sign-in + Support Hub */
 
 const msalConfig = {
@@ -18,14 +18,30 @@ const pca = new msal.PublicClientApplication(msalConfig);
 const IT_FORM_ID = "zsWebToCase_1109991000006963130";
 const CX_FORM_ID = "zsWebToCase_1109991000022561407";
 let currentProfile = null;
+let msalReadyPromise = null;
+let signInRunning = false;
 
 function $(id) { return document.getElementById(id); }
+
+function ensureMsalReady() {
+  if (!msalReadyPromise) msalReadyPromise = pca.initialize();
+  return msalReadyPromise;
+}
 
 function showAuthError(message, code) {
   const box = $("authError");
   if (!box) return;
-  const extra = code ? ` <span style="opacity:.8">(${code})</span>` : "";
-  box.innerHTML = `<strong>Sign-in failed</strong>${message}${extra}`;
+  box.textContent = "";
+  const title = document.createElement("strong");
+  title.textContent = "Sign-in failed";
+  box.appendChild(title);
+  box.appendChild(document.createTextNode(message || "Please try again."));
+  if (code) {
+    const extra = document.createElement("span");
+    extra.style.opacity = ".8";
+    extra.textContent = ` (${code})`;
+    box.appendChild(extra);
+  }
   box.hidden = false;
 }
 function clearAuthError() {
@@ -39,6 +55,13 @@ function setElementHidden(el, hidden) {
   el.hidden = hidden;
   el.style.display = hidden ? "none" : "";
 }
+function setSignInBusy(busy) {
+  [$("btnSignIn"), $("btnGateSignIn")].forEach(btn => {
+    if (!btn) return;
+    btn.disabled = busy;
+    btn.setAttribute("aria-busy", busy ? "true" : "false");
+  });
+}
 function showGate(show) {
   setElementHidden($("authGate"), !show);
 }
@@ -47,20 +70,42 @@ function hideAllViews() {
     setElementHidden($(id), true);
   });
 }
-function showWorkspace() {
+function normalizeRouteFromHash() {
+  const hash = (window.location.hash || "").replace("#", "").trim().toLowerCase();
+  if (hash === "it" || hash === "cx" || hash === "hub") return hash;
+  return "hub";
+}
+function updateRoute(route, mode) {
+  if (!mode) return;
+  const safeRoute = route === "it" || route === "cx" ? route : "hub";
+  const target = `#${safeRoute}`;
+  if (window.location.hash === target) return;
+  if (mode === "push") history.pushState({ view: safeRoute }, "", target);
+  else history.replaceState({ view: safeRoute }, "", target);
+}
+function showWorkspace(options = {}) {
+  const historyMode = options.historyMode === undefined ? "replace" : options.historyMode;
   hideAllViews();
   setElementHidden($("workspaceHub"), false);
-  history.replaceState(null, "", window.location.pathname);
-  window.scrollTo({ top: 0, behavior: "smooth" });
+  updateRoute("hub", historyMode);
+  if (options.scroll !== false) window.scrollTo({ top: 0, behavior: "smooth" });
 }
-function showSupportView(type) {
+function showSupportView(type, options = {}) {
+  const supportType = type === "cx" ? "cx" : "it";
+  const historyMode = options.historyMode === undefined ? "push" : options.historyMode;
   hideAllViews();
-  const target = type === "cx" ? $("cxSupportView") : $("itSupportView");
+  const target = supportType === "cx" ? $("cxSupportView") : $("itSupportView");
   setElementHidden(target, false);
   fillAllZohoFields(currentProfile);
-  if (type === "cx") initializeCxDependencies();
-  history.replaceState(null, "", `#${type}`);
-  window.scrollTo({ top: 0, behavior: "smooth" });
+  if (supportType === "cx") initializeCxDependencies();
+  updateRoute(supportType, historyMode);
+  if (options.scroll !== false) window.scrollTo({ top: 0, behavior: "smooth" });
+}
+function renderCurrentRoute() {
+  if (!currentProfile) return;
+  const route = normalizeRouteFromHash();
+  if (route === "it" || route === "cx") showSupportView(route, { historyMode: null, scroll: false });
+  else showWorkspace({ historyMode: null, scroll: false });
 }
 
 function setSignedInUI({ signedIn, name }) {
@@ -74,15 +119,15 @@ function setSignedInUI({ signedIn, name }) {
   const itHeaderBadge = $("itHeaderBadge");
   const cxHeaderBadge = $("cxHeaderBadge");
 
-  if (btnIn) btnIn.hidden = signedIn;
-  if (btnOut) btnOut.hidden = !signedIn;
-  if (pill) pill.hidden = !signedIn;
+  if (btnIn) setElementHidden(btnIn, signedIn);
+  if (btnOut) setElementHidden(btnOut, !signedIn);
+  if (pill) setElementHidden(pill, !signedIn);
   if (authName) authName.textContent = name || "Signed in";
   if (footerUser) footerUser.textContent = signedIn ? (name || "Signed in") : "Guest";
   if (workspaceUser) workspaceUser.textContent = signedIn ? (name || "RSSB User") : "RSSB User";
   if (headerBadge) headerBadge.textContent = signedIn ? (name || "Enterprise Solutions") : "Enterprise Solutions";
   if (itHeaderBadge) itHeaderBadge.textContent = "IT Support";
-  if (cxHeaderBadge) cxHeaderBadge.textContent = "Customer Experience";
+  if (cxHeaderBadge) cxHeaderBadge.textContent = "Schemes & Member Support";
 }
 
 function getForm(formId) { return document.forms[formId] || document.getElementById(formId); }
@@ -116,21 +161,65 @@ async function graphMe(accessToken) {
   if (!res.ok) throw new Error("Unable to read profile from Microsoft Graph.");
   return res.json();
 }
-async function acquireToken(account) {
-  try {
-    return await pca.acquireTokenSilent({ ...loginRequest, account });
-  } catch (e) {
-    return await pca.acquireTokenPopup(loginRequest);
+async function acquireTokenSilentOnly(account) {
+  return pca.acquireTokenSilent({ ...loginRequest, account });
+}
+function getErrorCode(error) {
+  return error?.errorCode || error?.error || error?.code || "";
+}
+function cleanupStaleMsalInteractionArtifacts() {
+  const stores = [window.sessionStorage, window.localStorage].filter(Boolean);
+  const tempTerms = [
+    "interaction.status",
+    "interaction_in_progress",
+    "request.state",
+    "nonce.idtoken",
+    "urlhash",
+    "origin.uri",
+    "renew.status"
+  ];
+  stores.forEach(store => {
+    Object.keys(store).forEach(key => {
+      const lower = key.toLowerCase();
+      if (lower.startsWith("msal.") && tempTerms.some(term => lower.includes(term))) {
+        store.removeItem(key);
+      }
+    });
+  });
+}
+function clearLegacyRedirectHashIfPresent() {
+  const hash = window.location.hash || "";
+  if (!hash || hash === "#hub" || hash === "#it" || hash === "#cx") return;
+  const lower = hash.toLowerCase();
+  if (lower.includes("code=") || lower.includes("error=") || lower.includes("state=")) {
+    cleanupStaleMsalInteractionArtifacts();
+    history.replaceState(null, "", window.location.pathname);
   }
 }
+async function loadProfileFromAccount(account) {
+  const token = await acquireTokenSilentOnly(account);
+  const me = await graphMe(token.accessToken);
+  currentProfile = me;
+  fillAllZohoFields(me);
+  setSignedInUI({ signedIn: true, name: me.displayName || account.username });
+  showGate(false);
+  return me;
+}
 async function hydrateUser() {
-  await pca.initialize();
-  const redirectResp = await pca.handleRedirectPromise().catch(() => null);
-  if (redirectResp?.account) pca.setActiveAccount(redirectResp.account);
-  else {
-    const accounts = pca.getAllAccounts();
-    if (accounts.length) pca.setActiveAccount(accounts[0]);
+  await ensureMsalReady();
+  clearLegacyRedirectHashIfPresent();
+
+  try {
+    const redirectResp = await pca.handleRedirectPromise();
+    if (redirectResp?.account) pca.setActiveAccount(redirectResp.account);
+  } catch (e) {
+    console.warn("Redirect response ignored in popup flow:", e);
+    cleanupStaleMsalInteractionArtifacts();
   }
+
+  const accounts = pca.getAllAccounts();
+  if (!pca.getActiveAccount() && accounts.length) pca.setActiveAccount(accounts[0]);
+
   const account = pca.getActiveAccount();
   if (!account) {
     setSignedInUI({ signedIn: false });
@@ -138,44 +227,97 @@ async function hydrateUser() {
     hideAllViews();
     return;
   }
-  const token = await acquireToken(account);
-  const me = await graphMe(token.accessToken);
-  currentProfile = me;
-  fillAllZohoFields(me);
-  setSignedInUI({ signedIn: true, name: me.displayName || account.username });
-  showGate(false);
-  showWorkspace();
+
+  try {
+    await loadProfileFromAccount(account);
+    renderCurrentRoute();
+    if (!window.location.hash) showWorkspace({ historyMode: "replace", scroll: false });
+  } catch (e) {
+    console.warn("Existing session found, but profile could not be loaded silently:", e);
+    setSignedInUI({ signedIn: false });
+    showGate(true);
+    hideAllViews();
+  }
 }
-async function signIn() {
+async function signIn(options = {}) {
+  if (signInRunning) return;
+  signInRunning = true;
+  setSignInBusy(true);
+
   try {
     clearAuthError();
-    await pca.initialize();
+    clearLegacyRedirectHashIfPresent();
+    await ensureMsalReady();
+
+    const existingAccount = pca.getActiveAccount() || pca.getAllAccounts()[0];
+    if (existingAccount) {
+      pca.setActiveAccount(existingAccount);
+      try {
+        await loadProfileFromAccount(existingAccount);
+        showWorkspace({ historyMode: "replace" });
+        return;
+      } catch (silentError) {
+        console.warn("Silent profile load failed, opening Microsoft sign-in:", silentError);
+      }
+    }
+
     const resp = await pca.loginPopup(loginRequest);
+    if (!resp?.account) throw new Error("Microsoft did not return an account after sign-in.");
     pca.setActiveAccount(resp.account);
-    const token = await acquireToken(resp.account);
-    const me = await graphMe(token.accessToken);
-    currentProfile = me;
-    fillAllZohoFields(me);
-    setSignedInUI({ signedIn: true, name: me.displayName || resp.account.username });
-    showGate(false);
-    showWorkspace();
+
+    let me;
+    if (resp.accessToken) {
+      me = await graphMe(resp.accessToken);
+      currentProfile = me;
+      fillAllZohoFields(me);
+      setSignedInUI({ signedIn: true, name: me.displayName || resp.account.username });
+      showGate(false);
+    } else {
+      me = await loadProfileFromAccount(resp.account);
+    }
+
+    showWorkspace({ historyMode: "replace" });
   } catch (e) {
+    const code = getErrorCode(e);
     console.error("Login failed:", e);
-    showAuthError("Please try again. If nothing opens, allow pop-ups for this site.", (e && (e.errorCode || e.error)));
+
+    if (code === "interaction_in_progress" && !options.retry) {
+      cleanupStaleMsalInteractionArtifacts();
+      signInRunning = false;
+      setSignInBusy(false);
+      await new Promise(resolve => setTimeout(resolve, 250));
+      return signIn({ retry: true });
+    }
+
+    if (code === "popup_window_error" || code === "popup_window_timeout") {
+      showAuthError("Please allow pop-ups for this site, then try again.", code);
+    } else if (code === "user_cancelled") {
+      showAuthError("The Microsoft sign-in window was closed before finishing.", code);
+    } else if (code === "interaction_in_progress") {
+      showAuthError("A previous sign-in attempt was stuck. Refresh this page once, then try again.", code);
+      cleanupStaleMsalInteractionArtifacts();
+    } else {
+      showAuthError("Please try again. If nothing opens, allow pop-ups for this site.", code);
+    }
+  } finally {
+    signInRunning = false;
+    setSignInBusy(false);
   }
 }
 async function signOut() {
   try {
-    await pca.initialize();
+    await ensureMsalReady();
     const account = pca.getActiveAccount();
     await pca.logoutPopup({ account });
   } catch (e) {
     console.warn("Sign out failed:", e);
   } finally {
     currentProfile = null;
+    cleanupStaleMsalInteractionArtifacts();
     setSignedInUI({ signedIn: false });
     hideAllViews();
     showGate(true);
+    history.replaceState(null, "", window.location.pathname);
   }
 }
 
@@ -388,13 +530,17 @@ document.addEventListener("DOMContentLoaded", () => {
   $("btnSignIn")?.addEventListener("click", signIn);
   $("btnGateSignIn")?.addEventListener("click", signIn);
   $("btnSignOut")?.addEventListener("click", signOut);
-  $("btnChooseIT")?.addEventListener("click", () => showSupportView("it"));
-  $("btnChooseCX")?.addEventListener("click", () => showSupportView("cx"));
-  $("btnBackFromIT")?.addEventListener("click", showWorkspace);
-  $("btnBackFromCX")?.addEventListener("click", showWorkspace);
+  $("btnChooseIT")?.addEventListener("click", () => showSupportView("it", { historyMode: "push" }));
+  $("btnChooseCX")?.addEventListener("click", () => showSupportView("cx", { historyMode: "push" }));
+  $("btnBackFromIT")?.addEventListener("click", () => showWorkspace({ historyMode: "push" }));
+  $("btnBackFromCX")?.addEventListener("click", () => showWorkspace({ historyMode: "push" }));
+
+  window.addEventListener("popstate", renderCurrentRoute);
+  window.addEventListener("hashchange", renderCurrentRoute);
 
   hydrateUser().catch(e => {
     console.error("Auth hydration failed:", e);
+    cleanupStaleMsalInteractionArtifacts();
     setSignedInUI({ signedIn: false });
     hideAllViews();
     showGate(true);
