@@ -1683,6 +1683,9 @@ body:has(#authGate:not([hidden])) .footer{
   display: none !important;
 }
 
+#authGate.authGate[hidden]{
+  display: none !important;
+}
 #authGate.authGate{
   position: fixed !important;
   inset: 0 !important;

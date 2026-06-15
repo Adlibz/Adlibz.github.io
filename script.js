@@ -1,14 +1,5 @@
+console.info("RSSB Support Portal auth build: LATEST-UI-STABLE-POPUP-AUTH-FALLBACK-ROUTING-20260614-v14");
 /* RSSB Support Portal - Microsoft Entra ID Sign-in + Support Hub */
-const BUILD_ID = "DEBUG-POPUP-HUB-20260614-v15";
-console.info("%c[RSSB] script build: " + BUILD_ID, "background:#2563eb;color:#fff;padding:2px 6px;border-radius:4px;");
-// Cache self-check: confirm the <script> tag that loaded this file is the version you think it is.
-(function cacheSelfCheck() {
-  try {
-    const tag = [...document.scripts].find(s => (s.src || "").includes("script.js"));
-    console.info("[RSSB] loaded script src:", tag ? tag.src : "(inline / not found)");
-    console.info("[RSSB] if the build id above is NOT v15, your browser is running a CACHED script.js. Hard-refresh (Ctrl/Cmd+Shift+R) or bump the ?v= query string.");
-  } catch (e) { /* no-op */ }
-})();
 
 const msalConfig = {
   auth: {
@@ -93,27 +84,15 @@ function updateRoute(route, mode) {
   else history.replaceState({ view: safeRoute }, "", target);
 }
 function showWorkspace(options = {}) {
-  console.info("[RSSB] showWorkspace() called", options);
   const historyMode = options.historyMode === undefined ? "replace" : options.historyMode;
-  showGate(false);                       // robust: ensure the sign-in gate is hidden, not just relying on activateSignedInAccount
   hideAllViews();
-  const hub = $("workspaceHub");
-  console.info("[RSSB] workspaceHub element found:", !!hub, "currently hidden:", hub ? hub.hidden : "(missing)");
-  setElementHidden(hub, false);
-  console.info("[RSSB] after showing hub -> hidden:", hub ? hub.hidden : "(missing)",
-               "inline display:", hub ? hub.style.display : "(missing)",
-               "computed display:", hub ? getComputedStyle(hub).display : "(missing)");
-  const gate = $("authGate");
-  console.info("[RSSB] after hiding gate -> gate hidden:", gate ? gate.hidden : "(missing)",
-               "computed display:", gate ? getComputedStyle(gate).display : "(missing)");
+  setElementHidden($("workspaceHub"), false);
   updateRoute("hub", historyMode);
   if (options.scroll !== false) window.scrollTo({ top: 0, behavior: "smooth" });
-  console.info("[RSSB] showWorkspace() done; hub should now be visible.");
 }
 function showSupportView(type, options = {}) {
   const supportType = type === "cx" ? "cx" : "it";
   const historyMode = options.historyMode === undefined ? "push" : options.historyMode;
-  showGate(false);                       // robust: never leave the gate covering a support view
   hideAllViews();
   const target = supportType === "cx" ? $("cxSupportView") : $("itSupportView");
   setElementHidden(target, false);
@@ -176,15 +155,11 @@ function fillAllZohoFields(profile) {
 }
 
 async function graphMe(accessToken) {
-  console.info("[RSSB] Graph /me -> request starting");
   const res = await fetch("https://graph.microsoft.com/v1.0/me?$select=displayName,givenName,surname,mail,userPrincipalName", {
     headers: { Authorization: `Bearer ${accessToken}` }
   });
-  console.info("[RSSB] Graph /me -> response status:", res.status, res.ok ? "OK" : "FAILED");
   if (!res.ok) throw new Error("Unable to read profile from Microsoft Graph.");
-  const json = await res.json();
-  console.info("[RSSB] Graph /me -> profile:", json?.displayName, json?.userPrincipalName);
-  return json;
+  return res.json();
 }
 async function acquireTokenSilentOnly(account) {
   return pca.acquireTokenSilent({ ...loginRequest, account });
@@ -240,12 +215,10 @@ function profileFromAccount(account) {
   };
 }
 function activateSignedInAccount(account, profile) {
-  console.info("[RSSB] activateSignedInAccount() for:", account?.username);
   const safeProfile = profile || profileFromAccount(account);
   currentProfile = safeProfile;
   fillAllZohoFields(safeProfile);
   setSignedInUI({ signedIn: true, name: safeProfile.displayName || account?.username || "Signed in" });
-  console.info("[RSSB] hiding sign-in gate now (showGate(false))");
   showGate(false);
   return safeProfile;
 }
@@ -262,7 +235,6 @@ async function loadProfileFromAccount(account) {
   }
 }
 async function hydrateUser() {
-  console.info("[RSSB] hydrateUser() start (runs on page load)");
   await ensureMsalReady();
   clearLegacyRedirectHashIfPresent();
 
@@ -275,11 +247,9 @@ async function hydrateUser() {
   }
 
   const accounts = pca.getAllAccounts();
-  console.info("[RSSB] hydrateUser: accounts in cache =", accounts.length);
   if (!pca.getActiveAccount() && accounts.length) pca.setActiveAccount(accounts[0]);
 
   const account = pca.getActiveAccount();
-  console.info("[RSSB] hydrateUser: active account =", account?.username || "(none)");
   if (!account) {
     setSignedInUI({ signedIn: false });
     showGate(true);
@@ -293,8 +263,7 @@ async function hydrateUser() {
   if (!window.location.hash) showWorkspace({ historyMode: "replace", scroll: false });
 }
 async function signIn(options = {}) {
-  console.info("[RSSB] signIn() entered. signInRunning =", signInRunning, "opts =", options);
-  if (signInRunning) { console.warn("[RSSB] signIn() ignored: already running"); return; }
+  if (signInRunning) return;
   signInRunning = true;
   setSignInBusy(true);
 
@@ -304,45 +273,34 @@ async function signIn(options = {}) {
     await ensureMsalReady();
 
     const existingAccount = pca.getActiveAccount() || pca.getAllAccounts()[0];
-    console.info("[RSSB] existing account present?", !!existingAccount, existingAccount?.username || "");
     if (existingAccount) {
       pca.setActiveAccount(existingAccount);
-      console.info("[RSSB] setActiveAccount() (existing) ->", pca.getActiveAccount()?.username);
       await loadProfileFromAccount(existingAccount);
-      console.info("[RSSB] about to call showWorkspace() (existing-account branch)");
       showWorkspace({ historyMode: "replace" });
       return;
     }
 
-    console.info("[RSSB] >>> calling loginPopup() now...");
     const resp = await pca.loginPopup(loginRequest);
-    console.info("[RSSB] <<< loginPopup() returned. account =", resp?.account?.username,
-                 "| accessToken present =", !!resp?.accessToken);
     if (!resp?.account) throw new Error("Microsoft did not return an account after sign-in.");
     pca.setActiveAccount(resp.account);
-    console.info("[RSSB] setActiveAccount() done ->", pca.getActiveAccount()?.username);
 
     if (resp.accessToken) {
       try {
-        console.info("[RSSB] before Graph /me (using popup accessToken)");
         const me = await graphMe(resp.accessToken);
-        console.info("[RSSB] after Graph /me success");
         activateSignedInAccount(resp.account, me);
       } catch (graphError) {
-        console.warn("[RSSB] Graph profile read failed; opening hub with account fallback:", graphError);
+        console.warn("Graph profile read failed after sign-in; opening hub with account fallback:", graphError);
         activateSignedInAccount(resp.account, profileFromAccount(resp.account));
       }
     } else {
-      console.info("[RSSB] no accessToken on response; loading profile via silent token");
       await loadProfileFromAccount(resp.account);
     }
 
-    console.info("[RSSB] about to call showWorkspace() (fresh-login branch)");
     showWorkspace({ historyMode: "replace" });
-    console.info("[RSSB] Microsoft sign-in completed; support hub is visible.");
+    console.info("Microsoft sign-in completed; support hub is visible.");
   } catch (e) {
     const code = getErrorCode(e);
-    console.error("[RSSB] Login failed:", code, e);
+    console.error("Login failed:", e);
 
     if (code === "interaction_in_progress" && !options.retry) {
       cleanupStaleMsalInteractionArtifacts();
@@ -585,13 +543,6 @@ window.addEventListener("pageshow", () => {
 });
 
 document.addEventListener("DOMContentLoaded", () => {
-  if (window.__rssbWired) {
-    console.warn("[RSSB] DOMContentLoaded handler ran twice — script.js may be included more than once. Skipping re-wire.");
-    return;
-  }
-  window.__rssbWired = true;
-  console.info("[RSSB] DOMContentLoaded: wiring up listeners");
-
   const y = $("year");
   if (y) y.textContent = new Date().getFullYear();
   wireItSubjectPrefill();
