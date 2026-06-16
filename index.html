@@ -17,7 +17,7 @@
   <script src="https://static.zohocdn.com/zohodeskstatic/app/js/jqueryandencoder.ef05974972bf3bca1b87.js"></script>
   <!-- Microsoft Entra ID (Azure AD) authentication for static sites (MSAL Browser) -->
   <script src="https://cdn.jsdelivr.net/npm/@azure/msal-browser@3.25.0/lib/msal-browser.min.js"></script>
-  <script defer src="./script.js?v=debug-popup-hub-v15"></script>
+  <script defer src="./script.js?v=ui-polish-stable-auth-v16"></script>
 </head>
 <body>
   <div class="page">
@@ -130,6 +130,7 @@
         <button id="btnChooseIT" class="workspaceCard workspaceCard--it" type="button">
           <span class="workspaceCard__icon" aria-hidden="true">💻</span>
           <span class="workspaceCard__body">
+            <span class="workspaceCard__category">Technical Support</span>
             <span class="workspaceCard__title">IT Support</span>
             <span class="workspaceCard__desc">For IT-related requests, access issues, devices, printers, network, email, software, and machine repair appointments.</span>
           </span>
@@ -139,7 +140,8 @@
         <button id="btnChooseCX" class="workspaceCard workspaceCard--cx" type="button">
           <span class="workspaceCard__icon" aria-hidden="true">🤝</span>
           <span class="workspaceCard__body">
-            <span class="workspaceCard__title workspaceCard__title--schemes">Schemes &amp;<br/>Member Support</span>
+            <span class="workspaceCard__category">Products &amp; Services</span>
+            <span class="workspaceCard__title workspaceCard__title--schemes">Schemes &amp; Member<br/>Support</span>
             <span class="workspaceCard__desc">For support related to RSSB products and schemes such as Ishema, Imisanzu, EjoHeza, Kwivuza/Medical, Occupational Hazard, Pension, CBHI, and Maternity Leave.</span>
           </span>
           <span class="workspaceCard__arrow" aria-hidden="true">→</span>
@@ -150,7 +152,10 @@
     <main id="itSupportView" class="layout supportView" hidden>
       <section class="panel panel--info">
         <div class="panel__inner">
-          <button id="btnBackFromIT" class="backBtn" type="button">← Change support type</button>
+          <div class="supportNav supportNav--it">
+            <button id="btnBackFromIT" class="backBtn supportNav__back" type="button"><span aria-hidden="true">←</span> Back to support options</button>
+            <div class="supportNav__context">IT Support</div>
+          </div>
           <div class="kicker">IT Support • Secure • Professional</div>
           <h1 class="title">IT Request Form</h1>
           <p class="lead">Use this form for IT issues, access requests, device problems, network issues, printer support, software support, or appointments to bring a machine for repair.</p>
@@ -240,7 +245,10 @@
     <main id="cxSupportView" class="layout supportView" hidden>
       <section class="panel panel--info panel--cx">
         <div class="panel__inner">
-          <button id="btnBackFromCX" class="backBtn" type="button">← Change support type</button>
+          <div class="supportNav supportNav--cx">
+            <button id="btnBackFromCX" class="backBtn supportNav__back" type="button"><span aria-hidden="true">←</span> Back to support options</button>
+            <div class="supportNav__context">Schemes &amp; Member Support</div>
+          </div>
           <div class="kicker">Schemes &amp; Member Support • Products • Services</div>
           <h1 class="title">Schemes &amp; Member Support Form</h1>
           <p class="lead">Use this form for support related to RSSB products and schemes including Ishema, Imisanzu, EjoHeza, Kwivuza/Medical, Occupational Hazard, Pension, CBHI, and Maternity Leave.</p>
