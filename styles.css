@@ -3434,3 +3434,45 @@ body:has(#authGate:not([hidden])){
     white-space: normal;
   }
 }
+
+/* =========================================================
+   Portal expansion: third support tile for PowerBuilder / User Requests
+   ========================================================= */
+@media (min-width: 1180px){
+  .workspaceGrid{
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.workspaceCard--pb::before{
+  background: rgba(241,174,29,.16);
+}
+
+.workspaceCard__title--pb{
+  line-height: 1.05;
+}
+
+@media (min-width:1180px){
+  .workspaceCard{
+    min-height: 255px;
+  }
+  .workspaceCard__title--pb,
+  .workspaceCard__title--schemes{
+    font-size: clamp(26px, 2.1vw, 34px);
+  }
+}
+
+.panel--pb .panel__glow{
+  background: radial-gradient(circle, rgba(241,174,29,.20), transparent 60%);
+}
+
+.supportNav--pb{
+  border-color: rgba(241,174,29,.24);
+}
+
+@media (max-width:1179px) and (min-width:921px){
+  .workspaceCard--pb{
+    grid-column: 1 / -1;
+    min-height: 190px;
+  }
+}

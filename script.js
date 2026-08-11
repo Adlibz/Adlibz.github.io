@@ -1,4 +1,4 @@
-console.info("RSSB Support Portal auth build: LATEST-UI-STABLE-POPUP-AUTH-FALLBACK-ROUTING-20260614-v14");
+console.info("RSSB Support Portal build: STABLE-AUTH-POWERBUILDER-TILE-20260811-v18");
 /* RSSB Support Portal - Microsoft Entra ID Sign-in + Support Hub */
 
 const msalConfig = {
@@ -17,6 +17,7 @@ const loginRequest = { scopes: ["User.Read"] };
 const pca = new msal.PublicClientApplication(msalConfig);
 const IT_FORM_ID = "zsWebToCase_1109991000006963130";
 const CX_FORM_ID = "zsWebToCase_1109991000022561407";
+const PB_FORM_ID = "zsWebToCase_1109991000032744608";
 let currentProfile = null;
 let msalReadyPromise = null;
 let signInRunning = false;
@@ -66,18 +67,18 @@ function showGate(show) {
   setElementHidden($("authGate"), !show);
 }
 function hideAllViews() {
-  ["workspaceHub", "itSupportView", "cxSupportView"].forEach(id => {
+  ["workspaceHub", "itSupportView", "cxSupportView", "pbSupportView"].forEach(id => {
     setElementHidden($(id), true);
   });
 }
 function normalizeRouteFromHash() {
   const hash = (window.location.hash || "").replace("#", "").trim().toLowerCase();
-  if (hash === "it" || hash === "cx" || hash === "hub") return hash;
+  if (hash === "it" || hash === "cx" || hash === "pb" || hash === "hub") return hash;
   return "hub";
 }
 function updateRoute(route, mode) {
   if (!mode) return;
-  const safeRoute = route === "it" || route === "cx" ? route : "hub";
+  const safeRoute = route === "it" || route === "cx" || route === "pb" ? route : "hub";
   const target = `#${safeRoute}`;
   if (window.location.hash === target) return;
   if (mode === "push") history.pushState({ view: safeRoute }, "", target);
@@ -91,10 +92,10 @@ function showWorkspace(options = {}) {
   if (options.scroll !== false) window.scrollTo({ top: 0, behavior: "smooth" });
 }
 function showSupportView(type, options = {}) {
-  const supportType = type === "cx" ? "cx" : "it";
+  const supportType = type === "cx" ? "cx" : (type === "pb" ? "pb" : "it");
   const historyMode = options.historyMode === undefined ? "push" : options.historyMode;
   hideAllViews();
-  const target = supportType === "cx" ? $("cxSupportView") : $("itSupportView");
+  const target = supportType === "cx" ? $("cxSupportView") : (supportType === "pb" ? $("pbSupportView") : $("itSupportView"));
   setElementHidden(target, false);
   fillAllZohoFields(currentProfile);
   if (supportType === "cx") initializeCxDependencies();
@@ -104,7 +105,7 @@ function showSupportView(type, options = {}) {
 function renderCurrentRoute() {
   if (!currentProfile) return;
   const route = normalizeRouteFromHash();
-  if (route === "it" || route === "cx") showSupportView(route, { historyMode: null, scroll: false });
+  if (route === "it" || route === "cx" || route === "pb") showSupportView(route, { historyMode: null, scroll: false });
   else showWorkspace({ historyMode: null, scroll: false });
 }
 
@@ -118,6 +119,7 @@ function setSignedInUI({ signedIn, name }) {
   const headerBadge = $("headerBadge");
   const itHeaderBadge = $("itHeaderBadge");
   const cxHeaderBadge = $("cxHeaderBadge");
+  const pbHeaderBadge = $("pbHeaderBadge");
 
   if (btnIn) setElementHidden(btnIn, signedIn);
   if (btnOut) setElementHidden(btnOut, !signedIn);
@@ -128,6 +130,7 @@ function setSignedInUI({ signedIn, name }) {
   if (headerBadge) headerBadge.textContent = signedIn ? (name || "Enterprise Solutions") : "Enterprise Solutions";
   if (itHeaderBadge) itHeaderBadge.textContent = "IT Support";
   if (cxHeaderBadge) cxHeaderBadge.textContent = "Schemes & Member Support";
+  if (pbHeaderBadge) pbHeaderBadge.textContent = "PowerBuilder / User Requests";
 }
 
 function getForm(formId) { return document.forms[formId] || document.getElementById(formId); }
@@ -152,6 +155,7 @@ function fillFormFields(formId, profile) {
 function fillAllZohoFields(profile) {
   fillFormFields(IT_FORM_ID, profile);
   fillFormFields(CX_FORM_ID, profile);
+  fillFormFields(PB_FORM_ID, profile);
 }
 
 async function graphMe(accessToken) {
@@ -189,7 +193,7 @@ function cleanupStaleMsalInteractionArtifacts() {
 }
 function clearLegacyRedirectHashIfPresent() {
   const hash = window.location.hash || "";
-  if (!hash || hash === "#hub" || hash === "#it" || hash === "#cx") return;
+  if (!hash || hash === "#hub" || hash === "#it" || hash === "#cx" || hash === "#pb") return;
   const lower = hash.toLowerCase();
   if (lower.includes("code=") || lower.includes("error=") || lower.includes("state=")) {
     cleanupStaleMsalInteractionArtifacts();
@@ -198,7 +202,7 @@ function clearLegacyRedirectHashIfPresent() {
 }
 function clearProtectedRouteHashWhenSignedOut() {
   const hash = (window.location.hash || "").toLowerCase();
-  if (hash === "#hub" || hash === "#it" || hash === "#cx") {
+  if (hash === "#hub" || hash === "#it" || hash === "#cx" || hash === "#pb") {
     history.replaceState(null, "", window.location.pathname);
   }
 }
@@ -358,6 +362,24 @@ function wireItSubjectPrefill() {
   });
 }
 
+function wirePbSubjectPrefill() {
+  const sel = $("pbIssueCategorySelect");
+  if (!sel) return;
+  const subject = field(PB_FORM_ID, "Subject");
+  if (subject) subject.addEventListener("input", () => { subject.dataset.autoSubject = "false"; });
+  sel.addEventListener("change", () => {
+    const subject = field(PB_FORM_ID, "Subject");
+    if (!subject) return;
+    const val = sel.value?.trim();
+    if (!val) return;
+    const autoText = `PowerBuilder / User Requests - ${val}`;
+    if (!subject.value || subject.dataset.autoSubject === "true") {
+      subject.value = autoText;
+      subject.dataset.autoSubject = "true";
+    }
+  });
+}
+
 function getCxDependencyData() {
   const raw = $("dependent_field_values_Cases_CX")?.value;
   if (!raw) return null;
@@ -449,14 +471,14 @@ function setDependent(obj, isload) {
 window.setDependent = setDependent;
 
 function showFormError(formType, message) {
-  const box = formType === "cx" ? $("cxFormError") : $("itFormError");
+  const box = formType === "cx" ? $("cxFormError") : (formType === "pb" ? $("pbFormError") : $("itFormError"));
   if (!box) return;
   box.textContent = message;
   box.hidden = false;
   box.scrollIntoView({ behavior: "smooth", block: "center" });
 }
 function clearFormError(formType) {
-  const box = formType === "cx" ? $("cxFormError") : $("itFormError");
+  const box = formType === "cx" ? $("cxFormError") : (formType === "pb" ? $("pbFormError") : $("itFormError"));
   if (!box) return;
   box.hidden = true;
   box.textContent = "";
@@ -486,9 +508,14 @@ function validateSupportForm(formId, formType) {
     : [
         ["Contact Name", "Last Name"],
         ["Email", "Email"],
-        ["Subject", "Title"],
+        ["Subject", formType === "pb" ? "Subject" : "Title"],
         ["Description", "Description"]
       ];
+  if (formType === "pb" && isEmptyField($("pbIssueCategorySelect"))) {
+    showFormError(formType, "Issue Category is required. Please select the request category before submitting.");
+    $("pbIssueCategorySelect")?.focus();
+    return false;
+  }
   for (const [name, label] of required) {
     const el = field(formId, name);
     if (isEmptyField(el)) {
@@ -516,6 +543,8 @@ function zsResetWebForm(webFormId) {
   form.querySelector("input[type='submit']")?.removeAttribute("disabled");
   fillAllZohoFields(currentProfile);
   if (form.id === CX_FORM_ID) initializeCxDependencies();
+  const subject = form.querySelector(`[name="Subject"]`);
+  if (subject) delete subject.dataset.autoSubject;
 }
 window.zsResetWebForm = zsResetWebForm;
 function zsOpenFileBrowseAttachment(clickEvent) { return true; }
@@ -539,13 +568,14 @@ window.zsChangeMousePointer = zsChangeMousePointer;
 
 // Some browsers restore disabled submit after back/forward cache. Undo that, because humanity deserves one less weird bug.
 window.addEventListener("pageshow", () => {
-  [IT_FORM_ID, CX_FORM_ID].forEach(id => getForm(id)?.querySelector("input[type='submit']")?.removeAttribute("disabled"));
+  [IT_FORM_ID, CX_FORM_ID, PB_FORM_ID].forEach(id => getForm(id)?.querySelector("input[type='submit']")?.removeAttribute("disabled"));
 });
 
 document.addEventListener("DOMContentLoaded", () => {
   const y = $("year");
   if (y) y.textContent = new Date().getFullYear();
   wireItSubjectPrefill();
+  wirePbSubjectPrefill();
   wireCxDependencies();
 
   $("btnSignIn")?.addEventListener("click", signIn);
@@ -553,8 +583,10 @@ document.addEventListener("DOMContentLoaded", () => {
   $("btnSignOut")?.addEventListener("click", signOut);
   $("btnChooseIT")?.addEventListener("click", () => showSupportView("it", { historyMode: "push" }));
   $("btnChooseCX")?.addEventListener("click", () => showSupportView("cx", { historyMode: "push" }));
+  $("btnChoosePB")?.addEventListener("click", () => showSupportView("pb", { historyMode: "push" }));
   $("btnBackFromIT")?.addEventListener("click", () => showWorkspace({ historyMode: "push" }));
   $("btnBackFromCX")?.addEventListener("click", () => showWorkspace({ historyMode: "push" }));
+  $("btnBackFromPB")?.addEventListener("click", () => showWorkspace({ historyMode: "push" }));
 
   window.addEventListener("popstate", renderCurrentRoute);
   window.addEventListener("hashchange", renderCurrentRoute);
