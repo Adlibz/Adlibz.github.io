@@ -1,0 +1,12 @@
+{
+  "form_configurations_and_field_mappings": "unchanged",
+  "original_script": "byte-identical",
+  "auth_callback": "byte-identical",
+  "original_images": "byte-identical",
+  "duplicate_ids": 0,
+  "missing_local_assets": 0,
+  "unlabelled_fields": 0,
+  "production_mock_code_included": false,
+  "stylesheet_bytes_before": 102375,
+  "stylesheet_bytes_after": 26289
+}

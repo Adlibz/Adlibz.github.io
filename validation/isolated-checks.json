@@ -1,0 +1,112 @@
+{
+  "results": [
+    {
+      "name": "Stylesheet parses without syntax errors",
+      "status": "passed"
+    },
+    {
+      "name": "Original authentication and business-logic script is byte-identical",
+      "status": "passed"
+    },
+    {
+      "name": "Sign-in UI opens the support hub with the mocked Microsoft account",
+      "status": "passed"
+    },
+    {
+      "name": "Both Knowledge Base links preserve the supplied URL and open in a new tab; exactly three support cards",
+      "status": "passed"
+    },
+    {
+      "name": "All three routes, account autofill, Back controls and keyboard focus",
+      "status": "passed"
+    },
+    {
+      "name": "Browser history Back and Forward handlers in the isolated DOM",
+      "status": "passed"
+    },
+    {
+      "name": "IT subject prefill, validation, error association, submission payload and duplicate-submit lock (POST intercepted)",
+      "status": "passed"
+    },
+    {
+      "name": "Form reset restores submit state and account autofill",
+      "status": "passed"
+    },
+    {
+      "name": "CX dependent dropdown mappings and subject behavior; Reset clears stale child options",
+      "status": "passed"
+    },
+    {
+      "name": "PowerBuilder category prefill and edited subjects preserved; existing HR payroll option retained",
+      "status": "passed"
+    },
+    {
+      "name": "Five named attachment pickers, individual removal and 20 MB rejection in each form (file selections simulated)",
+      "status": "passed"
+    },
+    {
+      "name": "Sign-out UI clears the visible workspace with the mocked provider",
+      "status": "passed"
+    },
+    {
+      "name": "No runtime exceptions in the exercised DOM flows",
+      "status": "passed"
+    },
+    {
+      "name": "Refresh on authenticated routes and signed-out route handling using mocked account storage",
+      "status": "passed"
+    },
+    {
+      "name": "Existing callback handling and Microsoft Graph fallback remain functional with service mocks",
+      "status": "passed"
+    },
+    {
+      "name": "Cancelled sign-in and unavailable Microsoft library have actionable error states",
+      "status": "passed"
+    },
+    {
+      "name": "Automated semantic accessibility checks across login, hub and three forms (layout/contrast excluded)",
+      "status": "passed"
+    }
+  ],
+  "accessibility": [
+    {
+      "route": "login",
+      "violations": [],
+      "incomplete": []
+    },
+    {
+      "route": "hub",
+      "violations": [],
+      "incomplete": [
+        "aria-prohibited-attr"
+      ]
+    },
+    {
+      "route": "it",
+      "violations": [],
+      "incomplete": [
+        "aria-prohibited-attr"
+      ]
+    },
+    {
+      "route": "cx",
+      "violations": [],
+      "incomplete": [
+        "aria-prohibited-attr"
+      ]
+    },
+    {
+      "route": "pb",
+      "violations": [],
+      "incomplete": [
+        "aria-prohibited-attr"
+      ]
+    }
+  ],
+  "limitations": [
+    "No rendered browser checks: local file access blocked by connected-browser policy.",
+    "MSAL, Graph, account storage and file selection simulated; no live sign-in or Zoho POST.",
+    "Power Apps permissions and app availability require a normal staff account."
+  ]
+}
