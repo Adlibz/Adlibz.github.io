@@ -5,7 +5,7 @@
       "status": "passed"
     },
     {
-      "name": "Original authentication and business-logic script is byte-identical",
+      "name": "Original MSAL tenant, client, redirect, cache configuration and requested scopes retained",
       "status": "passed"
     },
     {
@@ -62,6 +62,30 @@
     },
     {
       "name": "Cancelled sign-in and unavailable Microsoft library have actionable error states",
+      "status": "passed"
+    },
+    {
+      "name": "Failed or empty token results keep cached accounts behind the gate; explicit reauthentication recovers interaction-required sessions",
+      "status": "passed"
+    },
+    {
+      "name": "Graph 401 cannot be converted into a successful profile fallback",
+      "status": "passed"
+    },
+    {
+      "name": "Interrupted logout locks the portal, clears drafts, offers retry and survives cache-clear failure without removing unrelated storage",
+      "status": "passed"
+    },
+    {
+      "name": "Persistent logout intent blocks automatic reopening after refresh; explicit sign-in still works",
+      "status": "passed"
+    },
+    {
+      "name": "Logout from another tab and delayed profile responses cannot reopen the workspace",
+      "status": "passed"
+    },
+    {
+      "name": "Attachment allowlist and size boundary apply to all three forms; submit validation catches files that bypass selection events",
       "status": "passed"
     },
     {

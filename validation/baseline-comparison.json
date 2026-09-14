@@ -1,12 +1,32 @@
 {
-  "form_configurations_and_field_mappings": "unchanged",
-  "original_script": "byte-identical",
-  "auth_callback": "byte-identical",
-  "original_images": "byte-identical",
+  "status": "passed",
+  "form_count": 3,
+  "form_contracts_match_original": true,
+  "preserved_contract": [
+    "IDs",
+    "POST endpoints",
+    "encoding",
+    "hidden routing values",
+    "named fields",
+    "option values",
+    "inline integration handlers",
+    "length limits"
+  ],
+  "msal_configuration_and_scopes_match_original": true,
+  "callback_and_existing_assets_byte_identical": true,
+  "auth_logic_modified": "Token failure and logout handling only, plus UI guards; business mappings preserved.",
+  "intentional_markup_changes": [
+    "Attachment accept attributes",
+    "Script integrity attributes",
+    "Recovery/status controls",
+    "Release cache versions"
+  ],
   "duplicate_ids": 0,
+  "missing_labels": 0,
   "missing_local_assets": 0,
-  "unlabelled_fields": 0,
-  "production_mock_code_included": false,
-  "stylesheet_bytes_before": 102375,
-  "stylesheet_bytes_after": 26289
+  "external_script_integrity_count": 2,
+  "limitations": [
+    "CDN delivery of MSAL was unavailable here; its hash matches the exact npm version referenced by the CDN URL.",
+    "No live service or hosting authorization checks."
+  ]
 }

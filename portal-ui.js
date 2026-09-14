@@ -1,6 +1,6 @@
 /* Presentation and accessibility enhancements only.
  * MSAL configuration, tokens, account handling, Zoho mappings and POST actions
- * remain in the original, unchanged script.js and generated form HTML.
+ * remain in script.js and the generated form HTML.
  */
 (() => {
   'use strict';
@@ -56,9 +56,9 @@
     if (button && label) {
       const update = () => {
         label.textContent = button.dataset.unavailable === 'true' ? 'Sign-in unavailable'
-          : (button.disabled ? 'Signing in…' : 'Sign in with Microsoft');
+          : (button.disabled ? (button.dataset.busyAction === 'signout' ? 'Signing out…' : 'Signing in…') : 'Sign in with Microsoft');
       };
-      new MutationObserver(update).observe(button, { attributes: true, attributeFilter: ['disabled'] });
+      new MutationObserver(update).observe(button, { attributes: true, attributeFilter: ['disabled', 'data-busy-action'] });
       update();
     }
     byId('btnReloadSignIn')?.addEventListener('click', () => window.location.reload());
@@ -141,17 +141,16 @@
 
     form.querySelectorAll('.attachmentSlot').forEach(slot => {
       const input = slot.querySelector('input');
-      let sizeError = '';
-      // Read the size before the unchanged Zoho handler clears an oversized file.
+      let fileError = '';
+      // Read the policy result before the original named handler clears a rejected file.
       input.addEventListener('change', () => {
         const file = input.files?.[0];
-        sizeError = file && file.size > 20 * 1024 * 1024
-          ? 'This file exceeds 20 MB. Choose a smaller file.' : '';
+        fileError = window.portalAttachmentPolicy?.check(file) || ''; 
       }, true);
-      input.addEventListener('change', () => updateAttachments(form, sizeError));
+      input.addEventListener('change', () => updateAttachments(form, fileError));
       slot.querySelector('.fileRemove')?.addEventListener('click', () => {
         input.value = '';
-        sizeError = '';
+        fileError = '';
         updateAttachments(form);
         const next = [...form.querySelectorAll('.attachmentSlot:not([hidden]) input')]
           .find(field => !field.files?.length);

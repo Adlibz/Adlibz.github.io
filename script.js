@@ -1,4 +1,4 @@
-console.info("RSSB Support Portal build: STABLE-AUTH-POWERBUILDER-TILE-20260811-v18");
+// RSSB Support Portal — glass and focused session hardening, September 2026.
 /* RSSB Support Portal - Microsoft Entra ID Sign-in + Support Hub */
 
 const msalConfig = {
@@ -14,22 +14,85 @@ const msalConfig = {
 };
 
 const loginRequest = { scopes: ["User.Read"] };
-const pca = new msal.PublicClientApplication(msalConfig);
+const pca = window.msal?.PublicClientApplication ? new msal.PublicClientApplication(msalConfig) : null;
 const IT_FORM_ID = "zsWebToCase_1109991000006963130";
 const CX_FORM_ID = "zsWebToCase_1109991000022561407";
 const PB_FORM_ID = "zsWebToCase_1109991000032744608";
 let currentProfile = null;
 let msalReadyPromise = null;
 let signInRunning = false;
+let signOutRunning = false;
+let authGeneration = 0;
+let pendingSignOutAccount = null;
+let localSignOutState = "";
+// Stores only logout intent, never an account, token, or request contents.
+const SIGN_OUT_KEY = `rssb.support.signed-out.${msalConfig.auth.clientId}`;
+const SAFE_ERROR_CODES = new Set([
+  "interaction_required", "login_required", "consent_required", "no_tokens_found",
+  "interaction_in_progress", "user_cancelled", "popup_window_error", "popup_window_timeout",
+  "monitor_popup_timeout", "monitor_window_timeout", "no_network_connectivity",
+  "post_request_failed", "get_request_failed", "temporarily_unavailable",
+  "library_unavailable", "portal_signin_interrupted", "cache_clear_unavailable"
+]);
+function portalError(code) { const error = new Error(code); error.errorCode = code; return error; }
+function safeErrorCode(error) { const code = getErrorCode(error); return SAFE_ERROR_CODES.has(code) ? code : "unknown_error"; }
+function logPortalEvent(event, error) {
+  // Do not log full MSAL/Graph exceptions, claims, account data, or request URLs.
+  console.warn(`[RSSB Support] ${event}: ${safeErrorCode(error)}`);
+}
+function getLocalSignOutState() {
+  try { return window.localStorage.getItem(SIGN_OUT_KEY) || localSignOutState; }
+  catch (_) { return localSignOutState; }
+}
+function setLocalSignOutState(value) {
+  localSignOutState = value;
+  try {
+    if (value) window.localStorage.setItem(SIGN_OUT_KEY, value);
+    else window.localStorage.removeItem(SIGN_OUT_KEY);
+  } catch (_) { /* Current-page lock still applies if browser storage is unavailable. */ }
+}
+function needsInteractiveSignIn(error) {
+  return (typeof window.msal?.InteractionRequiredAuthError === "function" && error instanceof msal.InteractionRequiredAuthError)
+    || ["interaction_required", "login_required", "consent_required", "no_tokens_found"].includes(getErrorCode(error));
+}
+function showAuthStatus(message, retrySignOut = false) {
+  const status = $("authStatus");
+  if (status) { status.textContent = message; status.hidden = !message; }
+  setElementHidden($("btnRetrySignOut"), !retrySignOut);
+}
+function clearPortalSession(clearForms = false) {
+  currentProfile = null;
+  setSignedInUI({ signedIn: false });
+  hideAllViews();
+  showGate(true);
+  clearProtectedRouteHashWhenSignedOut();
+  if (clearForms) {
+    [IT_FORM_ID, CX_FORM_ID, PB_FORM_ID].forEach(id => {
+      const form = getForm(id);
+      form?.reset();
+      form?.querySelectorAll("input[type='file']").forEach(input => { input.value = ""; });
+      form?.querySelector("input[type='submit']")?.removeAttribute("disabled");
+    });
+  }
+}
+function showLocalSignOutState() {
+  clearPortalSession();
+  const pending = getLocalSignOutState() === "pending";
+  showAuthStatus(pending
+    ? "Your portal is locked. Microsoft sign-out did not finish. Please try signing out again."
+    : "You are signed out of this portal.", pending);
+}
 
 function $(id) { return document.getElementById(id); }
 
 function ensureMsalReady() {
+  if (!pca) return Promise.reject(portalError("library_unavailable"));
   if (!msalReadyPromise) msalReadyPromise = pca.initialize();
   return msalReadyPromise;
 }
 
 function showAuthError(message, code) {
+  code = SAFE_ERROR_CODES.has(code) ? code : "";
   const box = $("authError");
   if (!box) return;
   box.textContent = "";
@@ -56,9 +119,10 @@ function setElementHidden(el, hidden) {
   el.hidden = hidden;
   el.style.display = hidden ? "none" : "";
 }
-function setSignInBusy(busy) {
+function setSignInBusy(busy, action = "signin") {
   [$("btnSignIn"), $("btnGateSignIn")].forEach(btn => {
     if (!btn) return;
+    btn.dataset.busyAction = action;
     btn.disabled = busy;
     btn.setAttribute("aria-busy", busy ? "true" : "false");
   });
@@ -85,6 +149,7 @@ function updateRoute(route, mode) {
   else history.replaceState({ view: safeRoute }, "", target);
 }
 function showWorkspace(options = {}) {
+  if (!currentProfile || getLocalSignOutState()) { clearPortalSession(); return; }
   const historyMode = options.historyMode === undefined ? "replace" : options.historyMode;
   hideAllViews();
   setElementHidden($("workspaceHub"), false);
@@ -92,6 +157,7 @@ function showWorkspace(options = {}) {
   if (options.scroll !== false) window.scrollTo({ top: 0, behavior: "smooth" });
 }
 function showSupportView(type, options = {}) {
+  if (!currentProfile || getLocalSignOutState()) { clearPortalSession(); return; }
   const supportType = type === "cx" ? "cx" : (type === "pb" ? "pb" : "it");
   const historyMode = options.historyMode === undefined ? "push" : options.historyMode;
   hideAllViews();
@@ -162,7 +228,8 @@ async function graphMe(accessToken) {
   const res = await fetch("https://graph.microsoft.com/v1.0/me?$select=displayName,givenName,surname,mail,userPrincipalName", {
     headers: { Authorization: `Bearer ${accessToken}` }
   });
-  if (!res.ok) throw new Error("Unable to read profile from Microsoft Graph.");
+  if (res.status === 401) throw portalError("interaction_required");
+  if (!res.ok) throw new Error("Profile service unavailable");
   return res.json();
 }
 async function acquireTokenSilentOnly(account) {
@@ -218,7 +285,10 @@ function profileFromAccount(account) {
     userPrincipalName: username,
   };
 }
-function activateSignedInAccount(account, profile) {
+function activateSignedInAccount(account, profile, generation = authGeneration) {
+  if (generation !== authGeneration || signOutRunning) throw portalError("portal_signin_interrupted");
+  setLocalSignOutState("");
+  showAuthStatus("");
   const safeProfile = profile || profileFromAccount(account);
   currentProfile = safeProfile;
   fillAllZohoFields(safeProfile);
@@ -227,29 +297,35 @@ function activateSignedInAccount(account, profile) {
   return safeProfile;
 }
 async function loadProfileFromAccount(account) {
-  try {
-    const token = await acquireTokenSilentOnly(account);
-    const me = await graphMe(token.accessToken);
-    return activateSignedInAccount(account, me);
-  } catch (e) {
-    // Do not keep the user stuck on the sign-in screen just because Graph/profile loading failed.
-    // Microsoft sign-in already succeeded if we have an MSAL account. Use the account as fallback.
-    console.warn("Profile could not be loaded from Graph; continuing with Microsoft account fallback:", e);
-    return activateSignedInAccount(account, profileFromAccount(account));
+  const generation = authGeneration;
+  // An account entry alone is not a successful token check. Let auth failures
+  // reach the caller; only profile-service failures may use the name fallback.
+  const token = await acquireTokenSilentOnly(account);
+  if (!token?.accessToken) throw portalError("no_tokens_found");
+  let profile;
+  try { profile = await graphMe(token.accessToken); }
+  catch (error) {
+    if (needsInteractiveSignIn(error)) throw error;
+    logPortalEvent("profile_fallback", error);
+    profile = profileFromAccount(account);
   }
+  return activateSignedInAccount(account, profile, generation);
 }
+
 async function hydrateUser() {
   await ensureMsalReady();
   clearLegacyRedirectHashIfPresent();
+  if (getLocalSignOutState()) { showLocalSignOutState(); return; }
 
   try {
     const redirectResp = await pca.handleRedirectPromise();
     if (redirectResp?.account) pca.setActiveAccount(redirectResp.account);
   } catch (e) {
-    console.warn("Redirect response ignored in popup flow:", e);
+    logPortalEvent("redirect_response_unavailable", e);
     cleanupStaleMsalInteractionArtifacts();
   }
 
+  if (getLocalSignOutState()) { showLocalSignOutState(); return; }
   const accounts = pca.getAllAccounts();
   if (!pca.getActiveAccount() && accounts.length) pca.setActiveAccount(accounts[0]);
 
@@ -267,45 +343,57 @@ async function hydrateUser() {
   if (!window.location.hash) showWorkspace({ historyMode: "replace", scroll: false });
 }
 async function signIn(options = {}) {
-  if (signInRunning) return;
+  if (signInRunning || signOutRunning) return;
+  const generation = authGeneration;
   signInRunning = true;
   setSignInBusy(true);
 
   try {
     clearAuthError();
+    showAuthStatus("");
     clearLegacyRedirectHashIfPresent();
     await ensureMsalReady();
 
     const existingAccount = pca.getActiveAccount() || pca.getAllAccounts()[0];
-    if (existingAccount) {
+    if (existingAccount && !getLocalSignOutState()) {
       pca.setActiveAccount(existingAccount);
-      await loadProfileFromAccount(existingAccount);
-      showWorkspace({ historyMode: "replace" });
-      return;
+      try {
+        await loadProfileFromAccount(existingAccount);
+        showWorkspace({ historyMode: "replace" });
+        return;
+      } catch (error) {
+        // This function runs from an explicit sign-in click. Renew interactively
+        // only when Microsoft indicates that user interaction is needed.
+        if (!needsInteractiveSignIn(error)) throw error;
+      }
     }
 
-    const resp = await pca.loginPopup(loginRequest);
+    const resp = await pca.loginPopup(getLocalSignOutState()
+      ? { ...loginRequest, prompt: "select_account" } : loginRequest);
     if (!resp?.account) throw new Error("Microsoft did not return an account after sign-in.");
     pca.setActiveAccount(resp.account);
 
     if (resp.accessToken) {
       try {
         const me = await graphMe(resp.accessToken);
-        activateSignedInAccount(resp.account, me);
+        activateSignedInAccount(resp.account, me, generation);
       } catch (graphError) {
-        console.warn("Graph profile read failed after sign-in; opening hub with account fallback:", graphError);
-        activateSignedInAccount(resp.account, profileFromAccount(resp.account));
+        if (needsInteractiveSignIn(graphError) || getErrorCode(graphError) === "portal_signin_interrupted") throw graphError;
+        logPortalEvent("profile_fallback", graphError);
+        activateSignedInAccount(resp.account, profileFromAccount(resp.account), generation);
       }
     } else {
       await loadProfileFromAccount(resp.account);
     }
 
     showWorkspace({ historyMode: "replace" });
-    console.info("Microsoft sign-in completed; support hub is visible.");
+
   } catch (e) {
     const code = getErrorCode(e);
-    console.error("Login failed:", e);
+    logPortalEvent("sign_in_failed", e);
+    clearPortalSession();
 
+    if (code === "portal_signin_interrupted") return;
     if (code === "interaction_in_progress" && !options.retry) {
       cleanupStaleMsalInteractionArtifacts();
       signInRunning = false;
@@ -314,35 +402,59 @@ async function signIn(options = {}) {
       return signIn({ retry: true });
     }
 
-    if (code === "popup_window_error" || code === "popup_window_timeout") {
+    if (["popup_window_error", "popup_window_timeout", "monitor_popup_timeout"].includes(code)) {
       showAuthError("Please allow pop-ups for this site, then try again.", code);
     } else if (code === "user_cancelled") {
       showAuthError("The Microsoft sign-in window was closed before finishing.", code);
     } else if (code === "interaction_in_progress") {
       showAuthError("A previous sign-in attempt was stuck. Refresh this page once, then try again.", code);
       cleanupStaleMsalInteractionArtifacts();
+    } else if (needsInteractiveSignIn(e)) {
+      showAuthError("Please sign in again to verify your Microsoft session.", code);
     } else {
-      showAuthError("Please try again. If nothing opens, allow pop-ups for this site.", code);
+      showAuthError("We could not verify your Microsoft session. Check your connection and try signing in again.", code);
     }
+    if (getLocalSignOutState() === "pending") setElementHidden($("btnRetrySignOut"), false);
   } finally {
     signInRunning = false;
-    setSignInBusy(false);
+    if (!signOutRunning) setSignInBusy(false);
   }
 }
 async function signOut() {
+  if (signOutRunning) return;
+  signOutRunning = true;
+  authGeneration += 1;
+  setLocalSignOutState("pending");
+  pendingSignOutAccount = pendingSignOutAccount || pca?.getActiveAccount() || pca?.getAllAccounts()[0] || null;
+  clearPortalSession(true);
+  clearAuthError();
+  showAuthStatus("Signing out of Microsoft…");
+  setSignInBusy(true, "signout");
+  const retry = $("btnRetrySignOut");
+  if (retry) retry.disabled = true;
+  let completed = false;
   try {
     await ensureMsalReady();
-    const account = pca.getActiveAccount();
-    await pca.logoutPopup({ account });
-  } catch (e) {
-    console.warn("Sign out failed:", e);
+    await pca.logoutPopup({ account: pendingSignOutAccount });
+    completed = true;
+  } catch (error) {
+    logPortalEvent("sign_out_incomplete", error);
+    // The versioned MSAL API clears this application's cache for this account.
+    // Do not delete other applications' storage or pretend server logout worked.
+    try {
+      if (typeof pca?.clearCache !== "function") throw portalError("cache_clear_unavailable");
+      await pca.clearCache(pendingSignOutAccount ? { account: pendingSignOutAccount } : undefined);
+    } catch (cacheError) { logPortalEvent("local_cache_clear_incomplete", cacheError); }
   } finally {
-    currentProfile = null;
-    cleanupStaleMsalInteractionArtifacts();
-    setSignedInUI({ signedIn: false });
-    hideAllViews();
-    showGate(true);
-    history.replaceState(null, "", window.location.pathname);
+    try { pca?.setActiveAccount(null); }
+    catch (error) { logPortalEvent("active_account_clear_incomplete", error); }
+    setLocalSignOutState(completed ? "done" : "pending");
+    clearPortalSession();
+    showLocalSignOutState();
+    if (completed) pendingSignOutAccount = null;
+    signOutRunning = false;
+    setSignInBusy(false);
+    if (retry) retry.disabled = false;
   }
 }
 
@@ -383,7 +495,7 @@ function wirePbSubjectPrefill() {
 function getCxDependencyData() {
   const raw = $("dependent_field_values_Cases_CX")?.value;
   if (!raw) return null;
-  try { return JSON.parse(raw); } catch (e) { console.warn("Unable to parse CX dependencies", e); return null; }
+  try { return JSON.parse(raw); } catch (e) { logPortalEvent("dependent_options_unavailable", e); return null; }
 }
 function clearSelect(select, placeholder = "-None-") {
   if (!select) return;
@@ -491,10 +603,32 @@ function isEmptyField(el) {
 function validateEmail(email) {
   return /^([\w_][\w\-_.+'&]*)@(?=.{4,256}$)(([\w]+)([-_]*[\w])*\.)+[a-zA-Z]{2,22}$/.test(email || "");
 }
+// Client-side upload checks provide early feedback. The receiving service must
+// independently validate content, enforce limits and scan attachments.
+const MAX_ATTACHMENT_BYTES = 20 * 1024 * 1024;
+const ATTACHMENT_EXTENSIONS = Object.freeze(["pdf", "png", "jpg", "jpeg", "gif", "webp", "bmp", "tif", "tiff", "heic", "heif", "doc", "docx", "xls", "xlsx", "ppt", "pptx", "odt", "ods", "odp", "rtf", "csv", "txt", "log", "json", "xml", "eml", "msg", "zip"]);
+function getAttachmentError(file) {
+  if (!file) return "";
+  if (file.size > MAX_ATTACHMENT_BYTES) return "This file exceeds 20 MB. Choose a smaller file.";
+  const extension = (file.name || "").split(".").pop().toLowerCase();
+  if (!(file.name || "").includes(".") || !ATTACHMENT_EXTENSIONS.includes(extension)) {
+    return "This file type is not supported. Use a screenshot, document, text/log, email file or ZIP archive.";
+  }
+  return "";
+}
+window.portalAttachmentPolicy = Object.freeze({
+  accept: ATTACHMENT_EXTENSIONS.map(extension => `.${extension}`).join(","),
+  check: getAttachmentError
+});
 function validateSupportForm(formId, formType) {
   clearFormError(formType);
   const form = getForm(formId);
   if (!form) return false;
+  if (!currentProfile || getLocalSignOutState()) {
+    clearPortalSession();
+    showAuthError("Please sign in before submitting a request.");
+    return false;
+  }
   const required = formType === "cx"
     ? [
         ["Contact Name", "Last Name"],
@@ -530,6 +664,10 @@ function validateSupportForm(formId, formType) {
     email.focus();
     return false;
   }
+  for (const input of form.querySelectorAll("input[type='file']")) {
+    const error = getAttachmentError(input.files?.[0]);
+    if (error) { showFormError(formType, error); input.focus(); return false; }
+  }
   const submit = form.querySelector("input[type='submit']");
   if (submit) submit.setAttribute("disabled", "disabled");
   return true;
@@ -555,9 +693,10 @@ function zsRenderBrowseFileAttachment(value, input) {
   const file = input.files && input.files[0];
   const container = form?.querySelector("[id$='zsFileBrowseAttachments']");
   if (!file || !container) return;
-  if (file.size / (1024 * 1024) > 20) {
+  const error = getAttachmentError(file);
+  if (error) {
     input.value = "";
-    container.textContent = "Maximum allowed file size is 20MB.";
+    container.textContent = error;
     return;
   }
   container.textContent = `Selected: ${file.name}`;
@@ -581,6 +720,7 @@ document.addEventListener("DOMContentLoaded", () => {
   $("btnSignIn")?.addEventListener("click", signIn);
   $("btnGateSignIn")?.addEventListener("click", signIn);
   $("btnSignOut")?.addEventListener("click", signOut);
+  $("btnRetrySignOut")?.addEventListener("click", signOut);
   $("btnChooseIT")?.addEventListener("click", () => showSupportView("it", { historyMode: "push" }));
   $("btnChooseCX")?.addEventListener("click", () => showSupportView("cx", { historyMode: "push" }));
   $("btnChoosePB")?.addEventListener("click", () => showSupportView("pb", { historyMode: "push" }));
@@ -592,10 +732,26 @@ document.addEventListener("DOMContentLoaded", () => {
   window.addEventListener("hashchange", renderCurrentRoute);
 
   hydrateUser().catch(e => {
-    console.error("Auth hydration failed:", e);
+    if (getErrorCode(e) === "portal_signin_interrupted") return;
+    logPortalEvent("session_verification_failed", e);
+    currentProfile = null;
     cleanupStaleMsalInteractionArtifacts();
     setSignedInUI({ signedIn: false });
     hideAllViews();
     showGate(true);
+    clearProtectedRouteHashWhenSignedOut();
+    if (getErrorCode(e) === "library_unavailable") {
+      showAuthError("Microsoft sign-in could not load. Check your connection and refresh this page.");
+    } else {
+      showAuthError("Please sign in to verify your Microsoft session.", getErrorCode(e));
+    }
   });
+});
+window.addEventListener("storage", event => {
+  if (event.key === SIGN_OUT_KEY && event.newValue) {
+    authGeneration += 1;
+    localSignOutState = event.newValue;
+    clearPortalSession(true);
+    showLocalSignOutState();
+  }
 });

@@ -1,52 +1,63 @@
 # RSSB Support Portal
 
-Knowledge Base and interface update — 13 September 2026.
+13 September 2026 — glass refinement and focused security fixes (release r2).
 
-This is the updated working portal. It retains the existing Microsoft sign-in
-and three Zoho request forms: IT Support, Schemes & Member Support, and
-PowerBuilder / User Requests. A dedicated HR support tile remains deferred.
+Static RSSB staff portal with Microsoft 365 popup sign-in and three separate
+Zoho Desk request forms. The Knowledge Base is available in the header and
+between the welcome area and service cards.
 
-## Install on the existing portal
+## What this release changes
 
-Copy the contents of this folder to the existing portal location, preserving
-the current hostname, path and resource folder. Include the new `portal-ui.js`
-file together with `index.html` and `styles.css`. There is no build step and no
-new runtime dependency. Do not change the Entra application configuration or
-Zoho routing fields to install this interface update.
+- Frosted sign-in panel, header, Knowledge Base strip and service cards; richer
+  RSSB blue welcome area, warm-gold details and the original building photo.
+- Light and dark palettes follow the device setting. Solid fallbacks apply
+  when blur is unavailable or reduced transparency is requested. Form fields
+  retain opaque surfaces, accessible labels and clear error messages.
+- A cached Microsoft account no longer opens the portal after token acquisition
+  fails. Name fallback remains available after a successful token result when
+  the profile service is unavailable; Graph 401 is excluded.
+- Interrupted logout locks the portal, clears drafts and selected files,
+  attempts MSAL cache cleanup and offers a Microsoft sign-out retry. A marker
+  containing only logout intent prevents automatic reopening after refresh.
+- Browser attachment checks accept documented support file types and enforce
+  the existing 20 MB per-file limit at selection and submission. All five
+  original named attachment inputs remain.
+- Existing external scripts now carry SHA-384 integrity attributes. Logs use
+  fixed event names and known error codes, not complete exception objects.
 
-The existing `script.js`, `auth-blank.html` and image files are unchanged.
-Microsoft sign-in continues to use the current host and path as its redirect
-URI. Opening `index.html` directly from disk is not a live sign-in test.
+IT Support, Schemes & Member Support and PowerBuilder / User Requests remain.
+The dedicated HR tile is deferred; the existing HR payroll category remains.
 
-## What changed
+## Deploy on the existing host
 
-- A Knowledge Base strip above the three support cards and a smaller header
-  link open the supplied Power Apps app in a new tab.
-- A shared blue, white and gold design system replaces accumulated CSS
-  overrides. Light and dark modes continue to follow the device preference.
-- The login page, header, cards and form presentation use consistent spacing,
-  typography and icons. The signed-in name appears once in the header.
-- Visible field labels are linked to their inputs, required fields are marked,
-  errors identify the affected field, and navigation moves keyboard focus.
-- All five existing attachment fields are reachable, selected files can be
-  removed individually, and the existing 20 MB limit is retained.
-- Resetting the Schemes form clears stale dependent dropdown options.
+No build step or new runtime package installation is required.
 
-## Validation and remaining checks
+1. Keep a complete backup of the currently deployed release.
+2. Stage `index.html`, `styles.css`, `script.js`, `portal-ui.js`,
+   `auth-blank.html` and `resource/` together on the existing origin and path.
+3. Retain the current Microsoft application and Zoho form configuration.
+4. Complete the hosted checks in `RELEASE-NOTES.md` before replacing the live
+   release. Opening HTML directly from disk is not a valid sign-in test.
+5. Keep documentation and `validation/` with the release archive; they do not
+   need to be copied into the public website directory.
 
-17 isolated regression checks passed, including the original script, routes,
-autofill, field validation, dropdowns, reset, attachment controls and error
-states. Microsoft/Graph responses and file selections were simulated, and form
-POSTs were intercepted: these checks created no tickets.
+For rollback, restore the complete previous deployed release together.
 
-Automated semantic accessibility checks found no violations in the five views.
-40 design-token text/control contrast pairs passed their 4.5:1 or 3:1 targets.
-This is not a WCAG certification or a substitute for a rendered-page review.
+## Verification and remaining work
 
-The connected browser's security policy prevented opening local project files.
-Visual layout, native file-picker behavior and real Microsoft/Zoho/Power Apps
-access still need validation on the existing hosted portal. See
-`RELEASE-NOTES.md` for the short validation checklist and administrator items.
+23 isolated regression groups pass with mocked Microsoft/Graph responses,
+simulated attachment selections and intercepted form submissions. Semantic
+accessibility checks report no violations across the five views. 76 calculated
+contrast pairs pass, including conservative glass/image backdrop bounds.
 
-The `validation` folder contains check results only. Test fixtures and mock
-authentication code are not included in this project.
+The connected browser blocked local project preview under its security policy.
+Rendered layout, real Microsoft sign-in/logout, Zoho ticket creation and
+Power Apps permissions still require hosted validation. Integrity checks need
+a real-browser load too: the MSAL hash comes from the exact npm 3.25.0
+distribution; direct CDN delivery was unavailable in this environment.
+
+`deployment/SECURITY-REVIEW.md` maps all 20 security checklist items to their
+current state and remaining action. Browser guards cannot implement backend
+authorization, malware scanning, endpoint rate limits or hosting headers.
+
+Support contact: supportdesk@rssb.rw

@@ -1,242 +1,538 @@
-[
-  {
-    "theme": "light",
-    "foreground": "--text",
-    "background": "--background",
-    "ratio": 14.19
-  },
-  {
-    "theme": "light",
-    "foreground": "--text",
-    "background": "--surface",
-    "ratio": 15.22
-  },
-  {
-    "theme": "light",
-    "foreground": "--text",
-    "background": "--surface-subtle",
-    "ratio": 13.55
-  },
-  {
-    "theme": "light",
-    "foreground": "--text",
-    "background": "--accent-surface",
-    "ratio": 13.46
-  },
-  {
-    "theme": "light",
-    "foreground": "--text-secondary",
-    "background": "--background",
-    "ratio": 6.52
-  },
-  {
-    "theme": "light",
-    "foreground": "--text-secondary",
-    "background": "--surface",
-    "ratio": 6.99
-  },
-  {
-    "theme": "light",
-    "foreground": "--text-secondary",
-    "background": "--surface-subtle",
-    "ratio": 6.22
-  },
-  {
-    "theme": "light",
-    "foreground": "--text-secondary",
-    "background": "--accent-surface",
-    "ratio": 6.18
-  },
-  {
-    "theme": "light",
-    "foreground": "--text-muted",
-    "background": "--background",
-    "ratio": 5.03
-  },
-  {
-    "theme": "light",
-    "foreground": "--text-muted",
-    "background": "--surface",
-    "ratio": 5.4
-  },
-  {
-    "theme": "light",
-    "foreground": "--text-muted",
-    "background": "--surface-subtle",
-    "ratio": 4.8
-  },
-  {
-    "theme": "light",
-    "foreground": "--text-muted",
-    "background": "--accent-surface",
-    "ratio": 4.77
-  },
-  {
-    "theme": "light",
-    "foreground": "--link",
-    "background": "--background",
-    "ratio": 10.55
-  },
-  {
-    "theme": "light",
-    "foreground": "--link",
-    "background": "--surface",
-    "ratio": 11.31
-  },
-  {
-    "theme": "light",
-    "foreground": "--link",
-    "background": "--surface-subtle",
-    "ratio": 10.07
-  },
-  {
-    "theme": "light",
-    "foreground": "--link",
-    "background": "--accent-surface",
-    "ratio": 10.01
-  },
-  {
-    "theme": "light",
-    "foreground": "--error",
-    "background": "--error-bg",
-    "ratio": 6.85
-  },
-  {
-    "theme": "light",
-    "foreground": "--on-primary",
-    "background": "--primary",
-    "ratio": 11.31
-  },
-  {
-    "theme": "light",
-    "foreground": "--border-strong",
-    "background": "--input-bg",
-    "ratio": 3.65
-  },
-  {
-    "theme": "light",
-    "foreground": "--focus",
-    "background": "--surface",
-    "ratio": 6.04
-  },
-  {
-    "theme": "dark",
-    "foreground": "--text",
-    "background": "--background",
-    "ratio": 15.4
-  },
-  {
-    "theme": "dark",
-    "foreground": "--text",
-    "background": "--surface",
-    "ratio": 13.7
-  },
-  {
-    "theme": "dark",
-    "foreground": "--text",
-    "background": "--surface-subtle",
-    "ratio": 12.39
-  },
-  {
-    "theme": "dark",
-    "foreground": "--text",
-    "background": "--accent-surface",
-    "ratio": 12.31
-  },
-  {
-    "theme": "dark",
-    "foreground": "--text-secondary",
-    "background": "--background",
-    "ratio": 10.26
-  },
-  {
-    "theme": "dark",
-    "foreground": "--text-secondary",
-    "background": "--surface",
-    "ratio": 9.13
-  },
-  {
-    "theme": "dark",
-    "foreground": "--text-secondary",
-    "background": "--surface-subtle",
-    "ratio": 8.26
-  },
-  {
-    "theme": "dark",
-    "foreground": "--text-secondary",
-    "background": "--accent-surface",
-    "ratio": 8.2
-  },
-  {
-    "theme": "dark",
-    "foreground": "--text-muted",
-    "background": "--background",
-    "ratio": 8.44
-  },
-  {
-    "theme": "dark",
-    "foreground": "--text-muted",
-    "background": "--surface",
-    "ratio": 7.5
-  },
-  {
-    "theme": "dark",
-    "foreground": "--text-muted",
-    "background": "--surface-subtle",
-    "ratio": 6.79
-  },
-  {
-    "theme": "dark",
-    "foreground": "--text-muted",
-    "background": "--accent-surface",
-    "ratio": 6.74
-  },
-  {
-    "theme": "dark",
-    "foreground": "--link",
-    "background": "--background",
-    "ratio": 10.93
-  },
-  {
-    "theme": "dark",
-    "foreground": "--link",
-    "background": "--surface",
-    "ratio": 9.72
-  },
-  {
-    "theme": "dark",
-    "foreground": "--link",
-    "background": "--surface-subtle",
-    "ratio": 8.8
-  },
-  {
-    "theme": "dark",
-    "foreground": "--link",
-    "background": "--accent-surface",
-    "ratio": 8.74
-  },
-  {
-    "theme": "dark",
-    "foreground": "--error",
-    "background": "--error-bg",
-    "ratio": 9.0
-  },
-  {
-    "theme": "dark",
-    "foreground": "--on-primary",
-    "background": "--primary",
-    "ratio": 9.35
-  },
-  {
-    "theme": "dark",
-    "foreground": "--border-strong",
-    "background": "--input-bg",
-    "ratio": 5.03
-  },
-  {
-    "theme": "dark",
-    "foreground": "--focus",
-    "background": "--surface",
-    "ratio": 8.11
-  }
-]
+{
+  "method": "WCAG relative luminance; solid tokens and conservative black/white composite backdrop bounds. No rendered-browser contrast audit.",
+  "checks": [
+    {
+      "theme": "light",
+      "pair": "--text on --background",
+      "ratio": 13.92,
+      "target": 4.5,
+      "passed": true
+    },
+    {
+      "theme": "light",
+      "pair": "--text on --surface",
+      "ratio": 15.22,
+      "target": 4.5,
+      "passed": true
+    },
+    {
+      "theme": "light",
+      "pair": "--text on --surface-subtle",
+      "ratio": 13.55,
+      "target": 4.5,
+      "passed": true
+    },
+    {
+      "theme": "light",
+      "pair": "--text on --accent-surface",
+      "ratio": 13.46,
+      "target": 4.5,
+      "passed": true
+    },
+    {
+      "theme": "light",
+      "pair": "--text on --glass-surface over extreme backdrop",
+      "ratio": 11.02,
+      "target": 4.5,
+      "passed": true
+    },
+    {
+      "theme": "light",
+      "pair": "--text on --glass-accent over extreme backdrop",
+      "ratio": 10.93,
+      "target": 4.5,
+      "passed": true
+    },
+    {
+      "theme": "light",
+      "pair": "--text on --auth-surface over extreme backdrop",
+      "ratio": 11.41,
+      "target": 4.5,
+      "passed": true
+    },
+    {
+      "theme": "light",
+      "pair": "--text-secondary on --background",
+      "ratio": 6.39,
+      "target": 4.5,
+      "passed": true
+    },
+    {
+      "theme": "light",
+      "pair": "--text-secondary on --surface",
+      "ratio": 6.99,
+      "target": 4.5,
+      "passed": true
+    },
+    {
+      "theme": "light",
+      "pair": "--text-secondary on --surface-subtle",
+      "ratio": 6.22,
+      "target": 4.5,
+      "passed": true
+    },
+    {
+      "theme": "light",
+      "pair": "--text-secondary on --accent-surface",
+      "ratio": 6.18,
+      "target": 4.5,
+      "passed": true
+    },
+    {
+      "theme": "light",
+      "pair": "--text-secondary on --glass-surface over extreme backdrop",
+      "ratio": 5.06,
+      "target": 4.5,
+      "passed": true
+    },
+    {
+      "theme": "light",
+      "pair": "--text-secondary on --glass-accent over extreme backdrop",
+      "ratio": 5.02,
+      "target": 4.5,
+      "passed": true
+    },
+    {
+      "theme": "light",
+      "pair": "--text-secondary on --auth-surface over extreme backdrop",
+      "ratio": 5.24,
+      "target": 4.5,
+      "passed": true
+    },
+    {
+      "theme": "light",
+      "pair": "--text-muted on --background",
+      "ratio": 6.02,
+      "target": 4.5,
+      "passed": true
+    },
+    {
+      "theme": "light",
+      "pair": "--text-muted on --surface",
+      "ratio": 6.58,
+      "target": 4.5,
+      "passed": true
+    },
+    {
+      "theme": "light",
+      "pair": "--text-muted on --surface-subtle",
+      "ratio": 5.86,
+      "target": 4.5,
+      "passed": true
+    },
+    {
+      "theme": "light",
+      "pair": "--text-muted on --accent-surface",
+      "ratio": 5.82,
+      "target": 4.5,
+      "passed": true
+    },
+    {
+      "theme": "light",
+      "pair": "--text-muted on --glass-surface over extreme backdrop",
+      "ratio": 4.77,
+      "target": 4.5,
+      "passed": true
+    },
+    {
+      "theme": "light",
+      "pair": "--text-muted on --glass-accent over extreme backdrop",
+      "ratio": 4.73,
+      "target": 4.5,
+      "passed": true
+    },
+    {
+      "theme": "light",
+      "pair": "--text-muted on --auth-surface over extreme backdrop",
+      "ratio": 4.93,
+      "target": 4.5,
+      "passed": true
+    },
+    {
+      "theme": "light",
+      "pair": "--link on --background",
+      "ratio": 10.35,
+      "target": 4.5,
+      "passed": true
+    },
+    {
+      "theme": "light",
+      "pair": "--link on --surface",
+      "ratio": 11.31,
+      "target": 4.5,
+      "passed": true
+    },
+    {
+      "theme": "light",
+      "pair": "--link on --surface-subtle",
+      "ratio": 10.07,
+      "target": 4.5,
+      "passed": true
+    },
+    {
+      "theme": "light",
+      "pair": "--link on --accent-surface",
+      "ratio": 10.01,
+      "target": 4.5,
+      "passed": true
+    },
+    {
+      "theme": "light",
+      "pair": "--link on --glass-surface over extreme backdrop",
+      "ratio": 8.2,
+      "target": 4.5,
+      "passed": true
+    },
+    {
+      "theme": "light",
+      "pair": "--link on --glass-accent over extreme backdrop",
+      "ratio": 8.12,
+      "target": 4.5,
+      "passed": true
+    },
+    {
+      "theme": "light",
+      "pair": "--link on --auth-surface over extreme backdrop",
+      "ratio": 8.48,
+      "target": 4.5,
+      "passed": true
+    },
+    {
+      "theme": "light",
+      "pair": "--error on --error-bg",
+      "ratio": 6.85,
+      "target": 4.5,
+      "passed": true
+    },
+    {
+      "theme": "light",
+      "pair": "--on-primary on --primary",
+      "ratio": 11.31,
+      "target": 4.5,
+      "passed": true
+    },
+    {
+      "theme": "light",
+      "pair": "--border-strong on --input-bg",
+      "ratio": 3.65,
+      "target": 3,
+      "passed": true
+    },
+    {
+      "theme": "light",
+      "pair": "--focus on --surface",
+      "ratio": 6.04,
+      "target": 3,
+      "passed": true
+    },
+    {
+      "theme": "light",
+      "pair": "--gold-ink on --gold-soft",
+      "ratio": 8.26,
+      "target": 3,
+      "passed": true
+    },
+    {
+      "theme": "dark",
+      "pair": "--text on --background",
+      "ratio": 15.4,
+      "target": 4.5,
+      "passed": true
+    },
+    {
+      "theme": "dark",
+      "pair": "--text on --surface",
+      "ratio": 13.7,
+      "target": 4.5,
+      "passed": true
+    },
+    {
+      "theme": "dark",
+      "pair": "--text on --surface-subtle",
+      "ratio": 12.39,
+      "target": 4.5,
+      "passed": true
+    },
+    {
+      "theme": "dark",
+      "pair": "--text on --accent-surface",
+      "ratio": 12.31,
+      "target": 4.5,
+      "passed": true
+    },
+    {
+      "theme": "dark",
+      "pair": "--text on --glass-surface over extreme backdrop",
+      "ratio": 10.14,
+      "target": 4.5,
+      "passed": true
+    },
+    {
+      "theme": "dark",
+      "pair": "--text on --glass-accent over extreme backdrop",
+      "ratio": 9.65,
+      "target": 4.5,
+      "passed": true
+    },
+    {
+      "theme": "dark",
+      "pair": "--text on --auth-surface over extreme backdrop",
+      "ratio": 10.14,
+      "target": 4.5,
+      "passed": true
+    },
+    {
+      "theme": "dark",
+      "pair": "--text-secondary on --background",
+      "ratio": 10.26,
+      "target": 4.5,
+      "passed": true
+    },
+    {
+      "theme": "dark",
+      "pair": "--text-secondary on --surface",
+      "ratio": 9.13,
+      "target": 4.5,
+      "passed": true
+    },
+    {
+      "theme": "dark",
+      "pair": "--text-secondary on --surface-subtle",
+      "ratio": 8.26,
+      "target": 4.5,
+      "passed": true
+    },
+    {
+      "theme": "dark",
+      "pair": "--text-secondary on --accent-surface",
+      "ratio": 8.2,
+      "target": 4.5,
+      "passed": true
+    },
+    {
+      "theme": "dark",
+      "pair": "--text-secondary on --glass-surface over extreme backdrop",
+      "ratio": 6.75,
+      "target": 4.5,
+      "passed": true
+    },
+    {
+      "theme": "dark",
+      "pair": "--text-secondary on --glass-accent over extreme backdrop",
+      "ratio": 6.43,
+      "target": 4.5,
+      "passed": true
+    },
+    {
+      "theme": "dark",
+      "pair": "--text-secondary on --auth-surface over extreme backdrop",
+      "ratio": 6.75,
+      "target": 4.5,
+      "passed": true
+    },
+    {
+      "theme": "dark",
+      "pair": "--text-muted on --background",
+      "ratio": 8.44,
+      "target": 4.5,
+      "passed": true
+    },
+    {
+      "theme": "dark",
+      "pair": "--text-muted on --surface",
+      "ratio": 7.5,
+      "target": 4.5,
+      "passed": true
+    },
+    {
+      "theme": "dark",
+      "pair": "--text-muted on --surface-subtle",
+      "ratio": 6.79,
+      "target": 4.5,
+      "passed": true
+    },
+    {
+      "theme": "dark",
+      "pair": "--text-muted on --accent-surface",
+      "ratio": 6.74,
+      "target": 4.5,
+      "passed": true
+    },
+    {
+      "theme": "dark",
+      "pair": "--text-muted on --glass-surface over extreme backdrop",
+      "ratio": 5.55,
+      "target": 4.5,
+      "passed": true
+    },
+    {
+      "theme": "dark",
+      "pair": "--text-muted on --glass-accent over extreme backdrop",
+      "ratio": 5.29,
+      "target": 4.5,
+      "passed": true
+    },
+    {
+      "theme": "dark",
+      "pair": "--text-muted on --auth-surface over extreme backdrop",
+      "ratio": 5.55,
+      "target": 4.5,
+      "passed": true
+    },
+    {
+      "theme": "dark",
+      "pair": "--link on --background",
+      "ratio": 10.93,
+      "target": 4.5,
+      "passed": true
+    },
+    {
+      "theme": "dark",
+      "pair": "--link on --surface",
+      "ratio": 9.72,
+      "target": 4.5,
+      "passed": true
+    },
+    {
+      "theme": "dark",
+      "pair": "--link on --surface-subtle",
+      "ratio": 8.8,
+      "target": 4.5,
+      "passed": true
+    },
+    {
+      "theme": "dark",
+      "pair": "--link on --accent-surface",
+      "ratio": 8.74,
+      "target": 4.5,
+      "passed": true
+    },
+    {
+      "theme": "dark",
+      "pair": "--link on --glass-surface over extreme backdrop",
+      "ratio": 7.2,
+      "target": 4.5,
+      "passed": true
+    },
+    {
+      "theme": "dark",
+      "pair": "--link on --glass-accent over extreme backdrop",
+      "ratio": 6.85,
+      "target": 4.5,
+      "passed": true
+    },
+    {
+      "theme": "dark",
+      "pair": "--link on --auth-surface over extreme backdrop",
+      "ratio": 7.2,
+      "target": 4.5,
+      "passed": true
+    },
+    {
+      "theme": "dark",
+      "pair": "--error on --error-bg",
+      "ratio": 9.0,
+      "target": 4.5,
+      "passed": true
+    },
+    {
+      "theme": "dark",
+      "pair": "--on-primary on --primary",
+      "ratio": 9.35,
+      "target": 4.5,
+      "passed": true
+    },
+    {
+      "theme": "dark",
+      "pair": "--border-strong on --input-bg",
+      "ratio": 5.03,
+      "target": 3,
+      "passed": true
+    },
+    {
+      "theme": "dark",
+      "pair": "--focus on --surface",
+      "ratio": 8.11,
+      "target": 3,
+      "passed": true
+    },
+    {
+      "theme": "dark",
+      "pair": "--gold-ink on --gold-soft",
+      "ratio": 8.07,
+      "target": 3,
+      "passed": true
+    },
+    {
+      "theme": "both",
+      "pair": "--hero-text on hero 0",
+      "ratio": 13.18,
+      "target": 4.5,
+      "passed": true
+    },
+    {
+      "theme": "both",
+      "pair": "--hero-muted on hero 0",
+      "ratio": 11.42,
+      "target": 4.5,
+      "passed": true
+    },
+    {
+      "theme": "both",
+      "pair": "--hero-text on hero 1",
+      "ratio": 8.34,
+      "target": 4.5,
+      "passed": true
+    },
+    {
+      "theme": "both",
+      "pair": "--hero-muted on hero 1",
+      "ratio": 7.22,
+      "target": 4.5,
+      "passed": true
+    },
+    {
+      "theme": "both",
+      "pair": "--hero-text on hero 2",
+      "ratio": 5.26,
+      "target": 4.5,
+      "passed": true
+    },
+    {
+      "theme": "both",
+      "pair": "--hero-muted on hero 2",
+      "ratio": 4.56,
+      "target": 4.5,
+      "passed": true
+    },
+    {
+      "theme": "both",
+      "pair": "login text #e1e8f4 on brightest image bound",
+      "ratio": 6.08,
+      "target": 4.5,
+      "passed": true
+    },
+    {
+      "theme": "both",
+      "pair": "login text #ffffff on brightest image bound",
+      "ratio": 7.49,
+      "target": 4.5,
+      "passed": true
+    },
+    {
+      "theme": "both",
+      "pair": "login text #f6c95d on brightest image bound",
+      "ratio": 4.79,
+      "target": 4.5,
+      "passed": true
+    },
+    {
+      "theme": "both",
+      "pair": "login text #d1dced on brightest image bound",
+      "ratio": 5.41,
+      "target": 4.5,
+      "passed": true
+    }
+  ],
+  "passed": true
+}

@@ -1,100 +1,105 @@
-# Knowledge Base and interface update
+# Glass refinement and focused security fixes
 
-13 September 2026 — implemented in the existing portal project.
+13 September 2026 — r2, following the Knowledge Base/interface update.
 
-## Implemented scope
+## Interface
 
-| Area | Result |
+The sign-in page restores a frosted panel over the original RSSB building
+photograph. The signed-in hub gains a blue welcome panel, subtle glass on the
+header and service cards, stronger Montserrat headings, soft surface highlights
+and warm-gold arrow details. The Knowledge Base retains its strip and header
+link. Exactly three services remain; dedicated HR support is still deferred.
+
+Light mode uses white glass and opaque fallbacks; dark mode uses layered navy
+and softer light text. Both retain solid form controls. Blur is limited to a
+small set of surfaces. Reduced transparency, reduced motion and forced colors
+receive explicit styles. Secondary light-theme text was darkened and image
+overlays strengthened following the composite contrast calculation.
+
+Responsive rules retain stacked cards and forms on narrow screens. Account
+names wrap on mobile; card text columns can shrink without overflowing.
+Existing labels, errors and focus navigation remain. Rendered layout, zoom and
+assistive-technology review remain required.
+
+## Confirmed defects addressed
+
+| Area | New behavior |
 | --- | --- |
-| Knowledge Base | Compact strip between the welcome section and support cards; persistent link in the signed-in header. Both use the supplied URL and open a new tab with `noopener noreferrer`. |
-| Service options | IT Support, Schemes & Member Support and PowerBuilder / User Requests remain. The dedicated HR tile is deferred; the existing HR payroll category remains. |
-| UI and navigation | Shorter copy, consistent SVG icons, one signed-in account display, balanced cards, simpler login presentation and retained separate form routes. Desktop form guidance stays available in a sticky sidebar. |
-| Light theme | White surfaces, dark blue text, defined field borders, visible buttons and readable helper text. |
-| Dark theme | Layered navy surfaces, softer light text, legible inputs, visible borders and balanced blue accents. Device preference still selects the theme. |
-| Accessibility | Page titles, semantic headings, a skip link, explicit form labels, required markers, error associations, focus handling, 44 px primary controls, CSS reduced-motion and forced-color support. |
-| Responsiveness | Flexible header, single-column support cards on smaller screens, stacked mobile forms, wrapping labels and navigation. The account name remains available on mobile. |
-| Bugs fixed | Previously hidden attachment pickers become reachable; individual removal and size feedback are available. CX Reset clears stale child options. The initial sign-in page stays visible while authentication initializes, with recovery guidance if its library cannot load. |
-| Performance | Styles consolidated from approximately 102 KB to 26 KB. Existing assets and external libraries retained; no new runtime dependency. |
-| Safe implementation | Original `script.js`, callback HTML, images, form actions, field names, hidden values, option lists, attachment names and inline integration handlers preserved. |
+| Cached account after token failure | Token failures reach the sign-in gate. A cached profile cannot substitute for successful token acquisition. |
+| Profile service failure | Name/email fallback works after a successful token result, except when Graph returns 401. |
+| Session renewal | Explicit Sign in can open the existing Microsoft popup flow when silent acquisition requires interaction. Network failures do not grant access. |
+| Incomplete logout | The portal locks, clears drafts/files, attempts documented MSAL cache cleanup and offers retry. It does not report successful Microsoft logout after an error. |
+| Refresh and open tabs | A non-sensitive pending/done logout marker prevents automatic re-entry. Explicit sign-in can reopen the portal. Delayed profile results cannot reactivate a logged-out view. |
+| Signed-out UI actions | Navigation and validation entry points reject attempts to open or submit while signed out. These are UI guards, not backend authorization. |
+| Missing Microsoft script | The UI remains recoverable without an uncaught constructor reference error. |
+| Upload feedback | Extension and size checks run on selection and before ordinary submission. The receiving service must independently validate and scan content. |
+| Diagnostics | Raw exception objects and informational build/sign-in logs are removed. Fixed event names and allowlisted error codes remain. |
+| Script integrity | SHA-384 checks added to existing versioned Microsoft and Zoho script URLs; versions and URLs remain unchanged. |
+
+Allowed attachment extensions: `.pdf`, `.png`, `.jpg`, `.jpeg`, `.gif`, `.webp`,
+`.bmp`, `.tif`, `.tiff`, `.heic`, `.heif`, `.doc`, `.docx`, `.xls`, `.xlsx`,
+`.ppt`, `.pptx`, `.odt`, `.ods`, `.odp`, `.rtf`, `.csv`, `.txt`, `.log`, `.json`,
+`.xml`, `.eml`, `.msg`, `.zip`. Unsupported files receive a visible error.
+Archives, legacy Office files and email attachments still need service-side
+scanning. An allowed extension is not proof of safe content.
+
+## Preserved integrations
+
+Microsoft library version, tenant/client configuration, redirect URI, popup
+flow, cache configuration and requested User.Read scope are unchanged. Error
+and logout handling was deliberately modified to fix the defects above;
+script.js is therefore no longer byte-identical to the baseline.
+
+All three forms retain their IDs, POST action, encoding, hidden routing values,
+named fields, option values, length limits and inline integration handlers.
+The original callback page and images remain byte-identical. Knowledge Base
+URLs, routes, category dependencies and HR payroll remain. No new runtime
+dependency or server endpoint was introduced.
+
+## Verification
+
+- 23 isolated regression groups pass: routes, autofill, IT validation and
+  intercepted submission, CX dependencies/reset, PowerBuilder subjects, five
+  attachments, logout recovery, token errors and cross-tab logout.
+- Automated WCAG-tagged semantic checks report no violations across login,
+  hub and three forms. Rendering-dependent checks are excluded.
+- 76 calculated contrast pairs pass their 4.5:1 text or 3:1 control targets;
+  the lowest checked normal-text pair is 4.56:1. This includes conservative
+  black/white composite bounds, not a rendered-browser contrast audit.
+- Form/configuration preservation, callback/images, unique IDs, labels, local
+  asset paths, script syntax and stylesheet syntax pass.
+- MSAL 3.25.0 exposes the cache-clearing API used here. Its integrity hash
+  matches that exact npm distribution. Zoho's hash was calculated from the
+  existing CDN response, which permits cross-origin loading.
+
+Microsoft/Graph and account storage were simulated, file selections were
+simulated and POSTs intercepted. These results do not establish live sign-in,
+service-side authorization or ticket delivery. No penetration test or complete
+dependency vulnerability scan was performed.
+
+## Hosted checks before release
+
+1. Confirm both external scripts load with their integrity checks. Review
+   login, hub and all forms in light and dark modes using a normal staff browser.
+2. Check 360, 390, 768, 1024, 1366, 1440 and 1920 px, 200% zoom, long account
+   names, keyboard focus, native file pickers and reduced transparency.
+3. Sign in, refresh each route and use Back/Forward. Verify autofill and session
+   renewal with an expired session. Check profile-service failure separately.
+4. Sign out normally and with the popup deliberately closed. Confirm drafts
+   clear, retry is offered, refresh stays locked and another open tab locks.
+   Then sign in explicitly. Verify Microsoft session termination separately
+   from the local portal lock.
+5. Submit one agreed test ticket per form. Confirm department, fields,
+   attachments and return behavior. Exercise category dependencies and reset.
+6. Test supported/unsupported file types, the 20 MB boundary and five slots
+   against Zoho's actual per-file and aggregate upload policies.
+7. Confirm both Knowledge Base links work for ordinary staff, with data and
+   editing permissions restricted to the intended audiences.
 
 ## Files changed
 
-- `index.html`: approved layout, Knowledge Base links, metadata and accessible labels.
-- `styles.css`: consolidated tokens, component styles and responsive themes.
-- `portal-ui.js`: new, isolated presentation helpers for focus, labels/errors,
-  loading states, attachment controls and dependent-field reset.
-- `README.md`: current installation and validation guidance.
-- `RELEASE-NOTES.md` and `validation/`: implementation notes and check results.
+index.html, styles.css, script.js, portal-ui.js, README.md, RELEASE-NOTES.md,
+validation/, and new deployment/ review documentation.
 
-## Checks completed
-
-The original authentication/business-logic script and callback page were
-compared byte for byte. All three forms were compared for POST action, method,
-encoding, form identity, hidden field values, named fields, option values,
-length limits and inline event handlers. All matched the uploaded baseline.
-Original image bytes were retained. No duplicate IDs or missing field labels
-were found, and both Knowledge Base links match the supplied URL.
-
-17 regression groups passed in an isolated DOM environment, exercising login
-and logout presentation, callback and refresh handling, Back/Forward, account
-autofill, all three routes, validation, category cascading, reset, attachments,
-duplicate-submit locking and error states. Microsoft/Graph and file-selection
-boundaries were mocked; POST actions were intercepted. These checks do not
-establish that live authentication or ticket creation succeeded.
-
-Automated WCAG-tagged semantic rules reported no violations across login, hub,
-IT, CX and PowerBuilder views. Rendering-dependent rules were excluded. Of 40
-checked solid-color token pairs, normal-text pairs were at least 4.77:1 and
-tested control/focus pairs exceeded 3:1. Actual image overlays, native controls,
-zoom, rendered contrast and screen-reader behavior need a browser review.
-
-## Live validation on the existing host
-
-The connected browser blocked local portal URLs and files under its security
-policy, so screenshots and rendered layout checks could not be completed here.
-
-1. Sign in with a normal RSSB staff account. Check autofill in all three forms,
-   refresh a form, use Back and Forward, then sign out and sign in again.
-2. Open both Knowledge Base links and confirm the app is shared with that
-   account. Leave a partly completed request open while opening the link.
-3. Submit one agreed test ticket per form and confirm the correct Zoho
-   department, fields and attachments, including the existing return behavior.
-4. Check five attachments, individual removal, oversized-file rejection,
-   Reset, and the Scheme → Service → Issue sequence using real browser controls.
-5. Review light/dark mode at 360, 390, 768, 1024, 1366, 1440 and 1920 px;
-   verify keyboard navigation, focus visibility, 200% zoom, wrapping and scrolling.
-
-## Defensive security review
-
-No credentials, tokens or new authentication permissions were introduced.
-New links use `noopener noreferrer`; dynamic labels and file feedback use
-text operations rather than HTML injection. Test mocks are excluded from the
-release archive. Existing authentication and connection configuration was
-deliberately retained.
-
-The following require administrator verification; no security configuration
-was changed in this update:
-
-- **Potentially high impact if absent:** the ZIP implements a client-side
-  sign-in gate, but cannot demonstrate server-side authorization of Zoho
-  submissions. Confirm that the intended staff-only restrictions are enforced
-  at the appropriate server/service/network boundary. Hiding a form is not
-  server-side authorization. [OWASP authorization guidance](https://cheatsheetseries.owasp.org/cheatsheets/Authorization_Cheat_Sheet.html)
-- **Session and dependency hardening review:** the existing MSAL cache uses
-  localStorage and the page loads third-party scripts. Review cache/session
-  policy, supported library versions, CSP and script integrity controls with
-  the hosting/Entra owners. Local storage alone is not evidence of a vulnerability;
-  Microsoft treats its safety as dependent on preventing XSS and related issues.
-  Apply any change only after compatibility testing.
-  [Microsoft MSAL caching guidance](https://learn.microsoft.com/en-us/entra/msal/javascript/browser/caching)
-- **Existing sign-out fallback:** the original code returns to the login view
-  even when the Microsoft logout popup reports an error. Confirm that blocked
-  or cancelled logout does not leave an unexpected reusable session. This
-  behavior was retained because changing it requires authentication testing.
-- **Knowledge Base access:** app sharing and data-source permissions are
-  controlled in Power Apps/Microsoft 365 and must be checked there. Adding the
-  portal link does not grant those permissions.
-  [Microsoft app-sharing guidance](https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/share-app)
-
-No live Microsoft sign-in, Zoho ticket creation, Power Apps authorization check,
-server-side penetration test or dependency vulnerability scan was performed.
+This release is prepared for review/deployment. It has not been published to
+support.rssb.rw from this environment.

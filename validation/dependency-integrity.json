@@ -1,0 +1,15 @@
+{
+  "msal": {
+    "url": "https://cdn.jsdelivr.net/npm/@azure/msal-browser@3.25.0/lib/msal-browser.min.js",
+    "source": "exact npm 3.25.0 distribution; CDN request unavailable here",
+    "bytes": 303273,
+    "integrity": "sha384-psZ2Q5y5uGfaWz45MGa9egDEglSYKWVN1a9xgIQ0qHdt7LY6vi0qcIkBjs0tAv7Y"
+  },
+  "zoho": {
+    "url": "https://static.zohocdn.com/zohodeskstatic/app/js/jqueryandencoder.ef05974972bf3bca1b87.js",
+    "bytes": 108933,
+    "content_type": "text/javascript;charset=UTF-8",
+    "cors": "*",
+    "integrity": "sha384-rj8AMSfTbgYOV9VzPEh5KBzzi5fq2YHtwD+JyTF14G2E/o8RaCzIkRrDK4lg7iRf"
+  }
+}
