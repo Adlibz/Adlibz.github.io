@@ -356,6 +356,73 @@ button:disabled, .zohoFormWrap input[type='submit']:disabled { background: var(-
   .cta { margin-top: var(--s5); padding: 12px; gap: 10px; font-size: .8125rem; }
   .authSignInCard__foot { margin-top: var(--s5); padding-top: var(--s4); }
 }
+/* Desktop readability; the existing phone and tablet rules stay independent. */
+@media (min-width: 901px) {
+  .workspaceHero::before {
+    inset: 0;
+    background: linear-gradient(90deg, var(--hero-start) 36%, rgb(28 60 113 / 84%) 70%, rgb(27 58 114 / 80%)), url('./resource/images/building-bg.jpg') right 38% / 64% auto no-repeat;
+  }
+  .authFlow { gap: 20px; }
+  .authFlow li { gap: 10px; font-size: .9375rem; }
+  .authFlow li > span { width: 36px; height: 36px; flex: 0 0 36px; font-size: 1rem; }
+  .footer, .authFooter { font-size: .875rem; }
+  .footer { padding: 24px 0; }
+}
+/* Give wide monitor windows more room without scaling the whole document. */
+@media (min-width: 1600px) {
+  .page { width: clamp(1440px, 80vw, 1520px); }
+  .topbar { min-height: 96px; padding: 16px 28px; }
+  .brand__logo { width: 48px; height: 53px; }
+  .brand__name { font-size: 1.25rem; }
+  .brand__sub { font-size: .875rem; }
+  .account__label { font-size: .75rem; }
+  .headerKnowledge, .account__name, .btn, .backBtn { font-size: 1rem; }
+  .btn, .backBtn { min-height: 48px; }
+  .workspaceHub { padding: 36px 0; }
+  .workspaceHero { min-height: 240px; padding: 40px 48px; }
+  .workspaceHero > .title { font-size: clamp(2.5rem, 2.4vw, 3rem); }
+  .workspaceHero > .lead { font-size: 1rem; }
+  .knowledgeStrip { padding: 22px 28px; }
+  .knowledgeStrip__icon { width: 56px; height: 56px; }
+  .knowledgeStrip__eyebrow { font-size: .6875rem; }
+  .knowledgeStrip h2, .sectionHeading h2 { font-size: 1.25rem; }
+  .knowledgeStrip p { font-size: 1rem; }
+  .supportOptions { margin-top: 36px; }
+  .sectionHeading > span { font-size: .875rem; }
+  .workspaceGrid { gap: 24px; }
+  .workspaceCard { min-height: 308px; padding: 32px; }
+  .workspaceCard__icon { width: 56px; height: 56px; }
+  .workspaceCard__icon svg { width: 28px; height: 28px; }
+  .workspaceCard__body { padding-bottom: 24px; }
+  .workspaceCard__title { min-height: 0; font-size: clamp(1.25rem, 1.05vw, 1.375rem); }
+  .workspaceCard__desc { margin-top: 12px; font-size: 1rem; }
+  .workspaceCard__action { font-size: .9375rem; }
+  .workspaceCard__action svg { width: 36px; height: 36px; padding: 8px; }
+  .footer, .authFooter { font-size: .9375rem; }
+  .authGate__shell, .authFooter { width: clamp(1440px, 80vw, 1520px); }
+  .authWelcome__clientBanner { width: 216px; }
+  .authWelcome__portalName, .authSignInCard__intro { font-size: 1rem; }
+  .authWelcome__subtitle { font-size: 1.125rem; }
+  .authFlow { gap: 24px; }
+  .authFlow li { gap: 12px; font-size: 1rem; }
+  .authFlow li > span { width: 40px; height: 40px; flex-basis: 40px; font-size: 1.125rem; }
+  .authSignInCard .eyebrow { font-size: .75rem; }
+  .authSignInCard__foot { font-size: .875rem; }
+  .cta { min-height: 60px; font-size: 1rem; }
+  .layout .title { font-size: 2rem; }
+  .layout .lead, .infoCard__value { font-size: 1rem; }
+  .formHeader__title { font-size: 1.25rem; }
+  .formHeader__subtitle, .infoCard__label, .infoCard__hint,
+  .securityNote, .fieldOptional, .zsHintText,
+  .attachmentHelp, .attachmentSummary, .fileRemove { font-size: .875rem; }
+  .zohoFormWrap td.zsFontClass,
+  .zohoFormWrap input[type='text'], .zohoFormWrap input[type='date'],
+  .zohoFormWrap select, .zohoFormWrap textarea,
+  .zohoFormWrap input[type='submit'], .zohoFormWrap input[type='button'] { font-size: 1rem !important; }
+  .zohoFormWrap input[type='text'], .zohoFormWrap input[type='date'], .zohoFormWrap select,
+  .zohoFormWrap input[type='submit'], .zohoFormWrap input[type='button'] { min-height: 48px; }
+  .attachmentSlot input[type='file'], .attachmentSlot input::file-selector-button { font-size: .875rem; }
+}
 @media (prefers-reduced-transparency: reduce) {
   :root { --glass-surface: var(--surface); --glass-accent: var(--accent-surface); --auth-surface: var(--surface); }
   .topbar, .knowledgeStrip, .workspaceCard, .authSignInCard, .panel--info .panel__inner { -webkit-backdrop-filter: none; backdrop-filter: none; }

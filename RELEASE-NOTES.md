@@ -1,8 +1,73 @@
-# Glass refinement and focused security fixes
+# Release notes
+
+## r3 — Monitor sizing and readability
+
+14 September 2026. Approved after review of the monitor, sign-in steps and
+IT category screenshots, with Chrome zoom confirmed at 100%.
+
+### Interface changes
+
+| Area | Standard desktop | Wide viewport, 1600 CSS px and above |
+| --- | --- | --- |
+| Page shell | Existing 1240 px cap | Fluid 1440–1520 px cap, including padding |
+| Card headings and descriptions | Existing sizing | 20–22 px headings and 16 px descriptions |
+| Card icon boxes | Existing sizing | 56 px boxes with 28 px icons |
+| Sign-in step circles / labels | 36 px / 15 px | 40 px / 16 px |
+| Footer text | 14 px | 15 px |
+| Header, Knowledge Base and forms | Existing sizing | Larger supporting text and controls |
+
+The hero photo starts beneath the opaque part of a continuous blue gradient,
+removing the hard vertical join on desktop. The rightmost image overlay is
+80% opaque; the contrast calculation also includes the decorative highlight.
+
+The existing phone/tablet styling is retained through 900 CSS px. Desktop
+step, footer and hero adjustments start at 901 px. Wider shell and content
+scaling begins at 1600 px. These are browser viewport widths, not physical
+monitor sizes; zoom and operating-system scaling affect the available viewport.
+
+### IT category order
+
+1. -Select- (placeholder)
+2. DocuSign
+3. QT Connect
+4. Outlook issue
+5. Network / Internet issue
+6. Printer issue
+7. Hardware issue
+8. Software / Installation
+9. Account / Password
+10. Access / Permission
+11. Other
+
+Only the option order changes. Existing option values and title-prefill logic
+are retained. The placeholder remains the default after opening/resetting.
+
+### Verification and deployment
+
+The existing 23 isolated regression groups passed. Source comparisons confirm
+all earlier CSS declarations remain, all other HTML matches r2 except the
+stylesheet cache query, and all runtime scripts, callback and images are
+byte-identical to r2. All 78 calculated contrast pairs meet their text/control
+targets. Detailed results are in `validation/`.
+
+Source and calculated-width checks are not rendered-browser validation.
+After uploading to GitHub Pages, review login, hub and forms on the monitor at
+100% Chrome zoom, the usual Dell view and a phone; check the two themes, steps,
+footer and category order. Use the same hosting origin and path so the existing
+Microsoft redirect configuration remains applicable.
+
+Runtime changes: `index.html` and `styles.css` only. Documentation and validation
+results are updated. The stylesheet cache query is `20260914-monitor-r3`.
+This archive is ready to upload; it has not been deployed from this environment.
+Linux hosting and server-header work remain deferred.
+
+---
+
+## Glass refinement and focused security fixes
 
 13 September 2026 — r2, following the Knowledge Base/interface update.
 
-## Interface
+### Interface
 
 The sign-in page restores a frosted panel over the original RSSB building
 photograph. The signed-in hub gains a blue welcome panel, subtle glass on the
@@ -21,7 +86,7 @@ names wrap on mobile; card text columns can shrink without overflowing.
 Existing labels, errors and focus navigation remain. Rendered layout, zoom and
 assistive-technology review remain required.
 
-## Confirmed defects addressed
+### Confirmed defects addressed
 
 | Area | New behavior |
 | --- | --- |
@@ -43,7 +108,7 @@ Allowed attachment extensions: `.pdf`, `.png`, `.jpg`, `.jpeg`, `.gif`, `.webp`,
 Archives, legacy Office files and email attachments still need service-side
 scanning. An allowed extension is not proof of safe content.
 
-## Preserved integrations
+### Preserved integrations
 
 Microsoft library version, tenant/client configuration, redirect URI, popup
 flow, cache configuration and requested User.Read scope are unchanged. Error
@@ -56,7 +121,7 @@ The original callback page and images remain byte-identical. Knowledge Base
 URLs, routes, category dependencies and HR payroll remain. No new runtime
 dependency or server endpoint was introduced.
 
-## Verification
+### Verification
 
 - 23 isolated regression groups pass: routes, autofill, IT validation and
   intercepted submission, CX dependencies/reset, PowerBuilder subjects, five
@@ -77,7 +142,7 @@ simulated and POSTs intercepted. These results do not establish live sign-in,
 service-side authorization or ticket delivery. No penetration test or complete
 dependency vulnerability scan was performed.
 
-## Hosted checks before release
+### Hosted checks before release
 
 1. Confirm both external scripts load with their integrity checks. Review
    login, hub and all forms in light and dark modes using a normal staff browser.
@@ -96,7 +161,7 @@ dependency vulnerability scan was performed.
 7. Confirm both Knowledge Base links work for ordinary staff, with data and
    editing permissions restricted to the intended audiences.
 
-## Files changed
+### Files changed
 
 index.html, styles.css, script.js, portal-ui.js, README.md, RELEASE-NOTES.md,
 validation/, and new deployment/ review documentation.

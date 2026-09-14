@@ -1,5 +1,5 @@
 {
-  "method": "WCAG relative luminance; solid tokens and conservative black/white composite backdrop bounds. No rendered-browser contrast audit.",
+  "method": "WCAG relative luminance; solid tokens and conservative black/white composite backdrop bounds. No rendered-browser contrast audit. The new desktop image gradient is bounded by its lightest 80%-opaque endpoint over white, with a further conservative 5% decorative highlight.",
   "checks": [
     {
       "theme": "light",
@@ -507,6 +507,20 @@
     },
     {
       "theme": "both",
+      "pair": "--hero-text on hero 3",
+      "ratio": 5.38,
+      "target": 4.5,
+      "passed": true
+    },
+    {
+      "theme": "both",
+      "pair": "--hero-muted on hero 3",
+      "ratio": 4.66,
+      "target": 4.5,
+      "passed": true
+    },
+    {
+      "theme": "both",
       "pair": "login text #e1e8f4 on brightest image bound",
       "ratio": 6.08,
       "target": 4.5,
@@ -534,5 +548,6 @@
       "passed": true
     }
   ],
-  "passed": true
+  "passed": true,
+  "release": "20260914-monitor-r3"
 }

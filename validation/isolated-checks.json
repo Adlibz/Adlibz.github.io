@@ -132,5 +132,6 @@
     "No rendered browser checks: local file access blocked by connected-browser policy.",
     "MSAL, Graph, account storage and file selection simulated; no live sign-in or Zoho POST.",
     "Power Apps permissions and app availability require a normal staff account."
-  ]
+  ],
+  "release": "20260914-monitor-r3"
 }

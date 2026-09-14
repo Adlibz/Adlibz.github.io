@@ -1,0 +1,72 @@
+{
+  "release": "20260914-monitor-r3",
+  "status": "passed",
+  "it_category_order": [
+    "",
+    "DocuSign",
+    "QT Connect",
+    "Outlook issue",
+    "Network / Internet issue",
+    "Printer issue",
+    "Hardware issue",
+    "Software / Installation",
+    "Account / Password",
+    "Access / Permission",
+    "Other"
+  ],
+  "all_other_html_identical_to_r2": true,
+  "scripts_callback_and_images_identical_to_r2": true,
+  "limitations": [
+    "Source and isolated DOM verification only; rendered monitor and phone checks require the hosted portal."
+  ],
+  "stylesheet_syntax": "passed",
+  "preexisting_css_declarations_unchanged": true,
+  "desktop_readability_min_width_css_px": 901,
+  "monitor_layout_min_width_css_px": 1600,
+  "no_new_css_rules_apply_at_or_below_900_css_px": true,
+  "calculated_shell_widths": [
+    {
+      "viewport_css_px": 1366,
+      "previous_shell_css_px": 1240,
+      "updated_shell_css_px": 1240,
+      "horizontal_inner_padding_total_css_px": 64
+    },
+    {
+      "viewport_css_px": 1440,
+      "previous_shell_css_px": 1240,
+      "updated_shell_css_px": 1240,
+      "horizontal_inner_padding_total_css_px": 64
+    },
+    {
+      "viewport_css_px": 1599,
+      "previous_shell_css_px": 1240,
+      "updated_shell_css_px": 1240,
+      "horizontal_inner_padding_total_css_px": 64
+    },
+    {
+      "viewport_css_px": 1600,
+      "previous_shell_css_px": 1240,
+      "updated_shell_css_px": 1440,
+      "horizontal_inner_padding_total_css_px": 64
+    },
+    {
+      "viewport_css_px": 1920,
+      "previous_shell_css_px": 1240,
+      "updated_shell_css_px": 1520,
+      "horizontal_inner_padding_total_css_px": 64
+    },
+    {
+      "viewport_css_px": 2048,
+      "previous_shell_css_px": 1240,
+      "updated_shell_css_px": 1520,
+      "horizontal_inner_padding_total_css_px": 64
+    },
+    {
+      "viewport_css_px": 2560,
+      "previous_shell_css_px": 1240,
+      "updated_shell_css_px": 1520,
+      "horizontal_inner_padding_total_css_px": 64
+    }
+  ],
+  "calculated_widths_note": "CSS box calculation; not browser screenshots or rendered layout measurements."
+}
